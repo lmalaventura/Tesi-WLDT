@@ -159,3 +159,39 @@ implementare l'Agent Service con caricamento dinamico dell'OpenAPI.
 
 Condividere il materiale con il coordinatore e creare lo scheletro HTTP
 dell'Agent Service.
+
+## 03/08/2026
+
+### Attività svolte
+
+- Revisionato e consolidato il materiale documentale prodotto durante la
+  fase sperimentale.
+- Inviati al relatore benchmark, progettazione, proposta d'integrazione e
+  prototipo preliminare.
+- Creata una repository GitHub privata per il progetto di tesi.
+- Inizializzato l'Agent Service Python tramite FastAPI.
+- Implementati gli endpoint `GET /health` e `POST /query`.
+- Implementato il caricamento dinamico della specifica OpenAPI esposta dal
+  Persistence Service.
+- Implementato un catalogo normalizzato delle operazioni REST presenti nella
+  specifica.
+- Aggiunti test automatici per API HTTP, caricamento OpenAPI e costruzione
+  del catalogo.
+
+### Risultati
+
+L'Agent Service dispone ora di una base HTTP funzionante e non dipende da una
+copia statica della specifica OpenAPI.
+
+La specifica viene recuperata dall'indirizzo configurato del Persistence
+Service e trasformata in un catalogo interno contenente metodi HTTP, path,
+descrizioni, parametri obbligatori e presenza del request body.
+
+Questa soluzione riduce il rischio che un aggiornamento del Persistence
+Service renda l'agente incompatibile con il contratto API corrente.
+
+### Prossimo passo
+
+Implementare la selezione degli endpoint candidati a partire dal catalogo
+OpenAPI, integrando e correggendo il componente `ApiSelector` sviluppato nel
+prototipo sperimentale.

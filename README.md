@@ -45,3 +45,12 @@ e al Persistence Service non fanno parte della suite unitaria.
 
 La lista delle repository attualmente disponibili è riportata in
 `00_materiali/lista_repository.md`.
+
+## Endpoint disponibili
+
+- `GET /health`: verifica lo stato dell’Agent Service;
+- `GET /openapi/status`: verifica il caricamento della specifica OpenAPI;
+- `GET /openapi/operations`: restituisce il catalogo normalizzato delle
+  operazioni disponibili;
+- `POST /query`: riceve una richiesta in linguaggio naturale; la pipeline
+  agentica non è ancora collegata.

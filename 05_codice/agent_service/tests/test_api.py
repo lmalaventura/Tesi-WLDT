@@ -54,8 +54,18 @@ class FakeOpenApiLoader:
         return {
             "openapi": "3.0.3",
             "paths": {
-                "/health": {},
-                "/hdts": {},
+                "/health": {
+                    "get": {
+                        "operationId": "health",
+                        "summary": "Health check.",
+                    }
+                },
+                "/hdts": {
+                    "get": {
+                        "operationId": "getHdts",
+                        "summary": "Restituisce i Digital Twin.",
+                    }
+                },
             },
         }
 
@@ -77,3 +87,26 @@ def test_openapi_status() -> None:
         "openapi_version": "3.0.3",
         "path_count": 2,
     }
+
+def test_openapi_operations() -> None:
+    app.dependency_overrides[get_openapi_loader] = (
+        lambda: FakeOpenApiLoader()
+    )
+
+    try:
+        response = client.get("/openapi/operations")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["status"] == "ok"
+    assert data["source"] == (
+        "http://persistence-service/openapi.yaml"
+    )
+    assert data["count"] == 2
+    assert data["operations"][0]["method"] == "GET"
+    assert data["operations"][0]["path"] == "/hdts"
+    assert data["operations"][1]["path"] == "/health"

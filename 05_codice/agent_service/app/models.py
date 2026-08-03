@@ -35,3 +35,25 @@ class OpenApiStatusResponse(BaseModel):
     source: str
     openapi_version: str
     path_count: int
+
+class ApiOperationResponse(BaseModel):
+    """Operazione REST estratta dalla specifica OpenAPI."""
+
+    method: str
+    path: str
+    operation_id: str | None
+    summary: str
+    description: str
+    tags: list[str]
+    required_path_parameters: list[str]
+    required_query_parameters: list[str]
+    request_body_required: bool
+
+
+class OpenApiOperationsResponse(BaseModel):
+    """Elenco delle operazioni caricate dal Persistence Service."""
+
+    status: Literal["ok"] = "ok"
+    source: str
+    count: int
+    operations: list[ApiOperationResponse]
