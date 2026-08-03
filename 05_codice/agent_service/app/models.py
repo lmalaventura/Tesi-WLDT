@@ -27,3 +27,11 @@ class QueryResponse(BaseModel):
     status: Literal["stub"] = "stub"
     received_query: str
     message: str
+
+class OpenApiStatusResponse(BaseModel):
+    """Informazioni sulla specifica caricata dal Persistence Service."""
+
+    status: Literal["ok"] = "ok"
+    source: str
+    openapi_version: str
+    path_count: int
