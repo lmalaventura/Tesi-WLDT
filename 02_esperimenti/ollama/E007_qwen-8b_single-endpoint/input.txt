@@ -1,0 +1,46 @@
+﻿Di seguito è riportato un frammento OpenAPI.
+
+===== INIZIO OPENAPI =====
+
+openapi: 3.1.1
+info:
+  title: whdt-persistence-api
+  version: v0.2.0
+
+paths:
+  /hdts:
+    get:
+      operationId: hdts/get
+      summary: List HDTs
+      description: Returns all Human Digital Twins
+      responses:
+        '200':
+          description: All Human Digital Twins
+          content:
+            application/json:
+              schema:
+                type: array
+
+===== FINE OPENAPI =====
+
+===== INIZIO PROMPT =====
+
+Utilizza esclusivamente il frammento OpenAPI riportato sopra.
+
+Determina quale chiamata API deve essere eseguita per soddisfare la
+richiesta seguente.
+
+Non inventare endpoint o parametri.
+
+Restituisci esclusivamente:
+
+1. metodo HTTP;
+2. endpoint;
+3. parametri necessari;
+4. breve motivazione.
+
+Richiesta:
+
+Mostrami tutti i Digital Twin disponibili.
+
+===== FINE PROMPT =====
