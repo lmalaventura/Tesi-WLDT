@@ -21,13 +21,28 @@ class QueryRequest(BaseModel):
     )
 
 
+class CandidateOperationResponse(BaseModel):
+    """Operazione OpenAPI candidata per la richiesta dell'utente."""
+
+    method: str
+    path: str
+    operation_id: str | None
+    summary: str
+    score: int
+    matched_terms: list[str]
+    required_path_parameters: list[str]
+    required_query_parameters: list[str]
+    request_body_required: bool
+
+
 class QueryResponse(BaseModel):
-    """Risposta provvisoria dell'endpoint agentico."""
+    """Risposta della fase di selezione delle operazioni candidate."""
 
-    status: Literal["stub"] = "stub"
+    status: Literal["candidates"] = "candidates"
     received_query: str
+    candidate_count: int
+    candidates: list[CandidateOperationResponse]
     message: str
-
 class OpenApiStatusResponse(BaseModel):
     """Informazioni sulla specifica caricata dal Persistence Service."""
 

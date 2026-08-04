@@ -7,6 +7,43 @@ from app.services.openapi_loader import get_openapi_loader
 client = TestClient(app)
 
 
+class FakeOpenApiLoader:
+    """Loader controllato utilizzato nei test dell'API."""
+
+    spec_url = "http://persistence-service/openapi.yaml"
+
+    async def load(self) -> dict:
+        return {
+            "openapi": "3.0.3",
+            "paths": {
+                "/hdts": {
+                    "get": {
+                        "operationId": "getHdts",
+                        "summary": (
+                            "List all available Human Digital Twins."
+                        ),
+                    }
+                },
+                "/hdts/{id}/snapshot": {
+                    "get": {
+                        "operationId": "getHdtSnapshot",
+                        "summary": (
+                            "Get the current property values "
+                            "of a Human Digital Twin."
+                        ),
+                        "parameters": [
+                            {
+                                "name": "id",
+                                "in": "path",
+                                "required": True,
+                            }
+                        ],
+                    }
+                },
+            },
+        }
+
+
 def test_health() -> None:
     response = client.get("/health")
 
@@ -18,23 +55,35 @@ def test_health() -> None:
     }
 
 
-def test_query_stub() -> None:
-    response = client.post(
-        "/query",
-        json={
-            "query": "Mostrami tutti i Digital Twin disponibili.",
-        },
+def test_query_returns_ranked_candidates() -> None:
+    app.dependency_overrides[get_openapi_loader] = (
+        lambda: FakeOpenApiLoader()
     )
 
+    try:
+        response = client.post(
+            "/query",
+            json={
+                "query": (
+                    "Mostrami tutti i Digital Twin disponibili."
+                ),
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "stub",
-        "received_query": "Mostrami tutti i Digital Twin disponibili.",
-        "message": (
-            "Richiesta ricevuta correttamente. "
-            "La pipeline LLM non è ancora collegata."
-        ),
-    }
+
+    data = response.json()
+
+    assert data["status"] == "candidates"
+    assert data["received_query"] == (
+        "Mostrami tutti i Digital Twin disponibili."
+    )
+    assert data["candidate_count"] >= 1
+    assert data["candidates"][0]["method"] == "GET"
+    assert data["candidates"][0]["path"] == "/hdts"
+    assert data["candidates"][0]["score"] > 0
 
 
 def test_query_rejects_empty_text() -> None:
@@ -44,30 +93,6 @@ def test_query_rejects_empty_text() -> None:
     )
 
     assert response.status_code == 422
-
-class FakeOpenApiLoader:
-    """Loader controllato utilizzato nei test dell'API."""
-
-    spec_url = "http://persistence-service/openapi.yaml"
-
-    async def load(self) -> dict:
-        return {
-            "openapi": "3.0.3",
-            "paths": {
-                "/health": {
-                    "get": {
-                        "operationId": "health",
-                        "summary": "Health check.",
-                    }
-                },
-                "/hdts": {
-                    "get": {
-                        "operationId": "getHdts",
-                        "summary": "Restituisce i Digital Twin.",
-                    }
-                },
-            },
-        }
 
 
 def test_openapi_status() -> None:
@@ -88,6 +113,7 @@ def test_openapi_status() -> None:
         "path_count": 2,
     }
 
+
 def test_openapi_operations() -> None:
     app.dependency_overrides[get_openapi_loader] = (
         lambda: FakeOpenApiLoader()
@@ -107,6 +133,7 @@ def test_openapi_operations() -> None:
         "http://persistence-service/openapi.yaml"
     )
     assert data["count"] == 2
-    assert data["operations"][0]["method"] == "GET"
     assert data["operations"][0]["path"] == "/hdts"
-    assert data["operations"][1]["path"] == "/health"
+    assert data["operations"][1]["path"] == (
+        "/hdts/{id}/snapshot"
+    )

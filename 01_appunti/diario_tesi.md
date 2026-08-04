@@ -195,3 +195,35 @@ Service renda l'agente incompatibile con il contratto API corrente.
 Implementare la selezione degli endpoint candidati a partire dal catalogo
 OpenAPI, integrando e correggendo il componente `ApiSelector` sviluppato nel
 prototipo sperimentale.
+
+## 04/08/2026
+
+### Attività svolte
+
+- Implementato un selettore deterministico delle operazioni API candidate.
+- Collegata la selezione al catalogo OpenAPI generato dinamicamente.
+- Introdotta la normalizzazione delle richieste in linguaggio naturale.
+- Aggiunto un lessico di corrispondenza tra termini italiani e metadati
+  tecnici dell'OpenAPI.
+- Collegato il selettore all'endpoint `POST /query`.
+- Aggiunti test sulle cinque richieste principali del benchmark.
+- Documentato il funzionamento e i limiti della selezione.
+- Definita la prima struttura provvisoria dei capitoli della tesi.
+- Avviata la stesura personale dell'introduzione e degli obiettivi.
+
+### Risultati
+
+L'endpoint `POST /query` non restituisce più una risposta simulata, ma carica
+la specifica OpenAPI corrente, costruisce il catalogo delle operazioni e
+restituisce i candidati maggiormente coerenti con la richiesta ricevuta.
+
+La selezione rimane deterministica e osservabile: per ogni candidato vengono
+restituiti il punteggio e i termini che hanno contribuito alla scelta.
+
+Il modello LLM non è ancora collegato. Il passaggio successivo consisterà
+nella costruzione di un prompt contenente soltanto le operazioni candidate.
+
+### Prossimo passo
+
+Implementare il PromptBuilder e l'OllamaClient, definire lo schema JSON della
+chiamata generata e collegare il primo modello locale all'Agent Service.

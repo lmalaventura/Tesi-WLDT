@@ -3,12 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from .config import Settings, get_settings
 from .models import (
     ApiOperationResponse,
+    CandidateOperationResponse,
     HealthResponse,
     OpenApiOperationsResponse,
     OpenApiStatusResponse,
     QueryRequest,
     QueryResponse,
 )
+from .services.api_selector import ApiSelector, get_api_selector
 from .services.openapi_catalog import (
     OpenApiCatalog,
     OpenApiCatalogError,
@@ -43,6 +45,11 @@ def health(
     "/openapi/status",
     response_model=OpenApiStatusResponse,
     tags=["openapi"],
+    responses={
+        503: {
+            "description": "Persistence Service non disponibile.",
+        },
+    },
 )
 async def openapi_status(
     loader: OpenApiLoader = Depends(get_openapi_loader),
@@ -68,6 +75,14 @@ async def openapi_status(
     "/openapi/operations",
     response_model=OpenApiOperationsResponse,
     tags=["openapi"],
+    responses={
+        500: {
+            "description": "Catalogo OpenAPI non valido.",
+        },
+        503: {
+            "description": "Persistence Service non disponibile.",
+        },
+    },
 )
 async def openapi_operations(
     loader: OpenApiLoader = Depends(get_openapi_loader),
@@ -118,14 +133,69 @@ async def openapi_operations(
     "/query",
     response_model=QueryResponse,
     tags=["agent"],
+    responses={
+        500: {
+            "description": "Catalogo OpenAPI non valido.",
+        },
+        503: {
+            "description": "Persistence Service non disponibile.",
+        },
+    },
 )
-def process_query(payload: QueryRequest) -> QueryResponse:
-    """Riceve una query; la pipeline verrà collegata nei prossimi step."""
+async def process_query(
+    payload: QueryRequest,
+    loader: OpenApiLoader = Depends(get_openapi_loader),
+    selector: ApiSelector = Depends(get_api_selector),
+) -> QueryResponse:
+    """Seleziona le operazioni candidate per la richiesta ricevuta."""
+
+    try:
+        document = await loader.load()
+        catalog = OpenApiCatalog.from_document(document)
+    except OpenApiLoadError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
+    except OpenApiCatalogError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        ) from exc
+
+    ranked_operations = selector.select(
+        query=payload.query,
+        catalog=catalog,
+        limit=5,
+    )
+
+    candidates = [
+        CandidateOperationResponse(
+            method=candidate.operation.method,
+            path=candidate.operation.path,
+            operation_id=candidate.operation.operation_id,
+            summary=candidate.operation.summary,
+            score=candidate.score,
+            matched_terms=list(candidate.matched_terms),
+            required_path_parameters=list(
+                candidate.operation.required_path_parameters
+            ),
+            required_query_parameters=list(
+                candidate.operation.required_query_parameters
+            ),
+            request_body_required=(
+                candidate.operation.request_body_required
+            ),
+        )
+        for candidate in ranked_operations
+    ]
 
     return QueryResponse(
         received_query=payload.query,
+        candidate_count=len(candidates),
+        candidates=candidates,
         message=(
-            "Richiesta ricevuta correttamente. "
-            "La pipeline LLM non è ancora collegata."
+            "Operazioni candidate selezionate. "
+            "Il modello LLM non è ancora collegato."
         ),
     )

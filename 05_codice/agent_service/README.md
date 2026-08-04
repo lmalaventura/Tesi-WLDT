@@ -5,13 +5,20 @@ naturale in chiamate REST verso il Persistence Service WLDT.
 
 ## Stato attuale
 
-Lo scheletro HTTP espone:
+L'Agent Service:
 
-- `GET /health`;
-- `POST /query`.
+- recupera dinamicamente la specifica OpenAPI dal Persistence Service;
+- costruisce un catalogo normalizzato delle operazioni REST;
+- analizza la richiesta in linguaggio naturale;
+- restituisce un elenco ordinato di operazioni candidate.
 
-L'endpoint `/query` riceve e valida la richiesta, ma non utilizza ancora il
-modello LLM e non esegue chiamate verso il Persistence Service.
+La selezione utilizza path, operationId, descrizioni, tag e parametri
+dell'OpenAPI. Il modello LLM, la validazione finale e l'esecuzione della
+chiamata REST non sono ancora collegati.
+
+Quando il Persistence Service non è raggiungibile, gli endpoint che dipendono
+dalla specifica OpenAPI restituiscono `503 Service Unavailable`.
+
 
 ## Avvio
 

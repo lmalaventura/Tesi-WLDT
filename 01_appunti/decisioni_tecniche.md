@@ -113,3 +113,21 @@ La specifica usata per selezione e validazione verrà recuperata dal
 Persistence Service tramite `GET /openapi.yaml`, in modo che i due componenti
 utilizzino lo stesso contratto. Devono essere definite la politica di refresh
 e la gestione dell'indisponibilità del servizio.
+
+
+## Selezione deterministica delle API candidate — 04/08/2026
+
+È stato implementato un primo selettore deterministico delle operazioni
+OpenAPI.
+
+Il selettore lavora sul catalogo generato dinamicamente dalla specifica del
+Persistence Service e non utilizza un elenco statico degli endpoint.
+
+La richiesta viene normalizzata e confrontata con path, operationId,
+descrizioni, tag e parametri delle operazioni. Il risultato è una lista
+ordinata di candidati associati a un punteggio e ai termini che hanno
+contribuito alla selezione.
+
+Questa fase non produce ancora la chiamata REST definitiva. Il suo scopo è
+ridurre il contesto che verrà fornito al modello LLM e rendere osservabile il
+processo di scelta preliminare.

@@ -1,0 +1,34 @@
+# Introduzione e obiettivi — bozza personale
+
+## Paragrafo 1 — Contesto
+
+Il contesto in cui si pone l'oggetto di questa tesi è il sistema WhiteLabel Digital-Twin. Il sistema WLDT fornisce un'infrastruttura che si occupa di gestione e interrogazione di dati associati ai Digital Twin contenuti nel sistema. Al suo interno, è presente il Persistence Service, un componente che espone un insieme di API REST attraverso le quali gli altri componenti possono recuperare informazioni, consultare valori correnti o storici ed eseguire interrogazioni sulle proprietà memorizzate, rappresentando una memorizzazione di informazioni di tipo non-volatile. Le operazioni disponibili vengono descritte tramite una specifica OpenAPI, che definisce metodi HTTP, percorsi, parametri e corpi di richieste accettate dal servizio. Per questo motivo un'applicazione client basata su questo contesto deve conoscere non soltanto l'informazione richiesta dall'utente, ma anche una struttura specifica della chiamata da inviare. L'obiettivo che viene posto nello svolgimento di questa tesi è quindi aggiungere un componente esterno che possa rendere più immediato e intuitivo l'accesso alle funzionalità previste dal Persistence Service, non andando a modificare la logica del contesto a cui appartiene.
+
+## Paragrafo 2 — Problema
+
+La logica dell'elaborazione di una query, attuata durante il mio tirocinio, si sviluppava con l'utilizzo di pulsanti a schermo e parametri di un formato specifico, restituendo una risposta in formato JSON o Excel.
+Questo approccio risultava molto macchinoso e con una portabilità minima, in quanto la GUI e le logiche sarebbero dovute cambiare ogni qualvolta venisse modificato il contesto.
+L'utilizzo di richieste in linguaggio naturale, però, racchiude in sé un ulteriore problema; l'utilizzo diretto delle API richiede una struttura specifica e, quindi, una conoscenza tecnica della struttura del Persistence Service e della relativa specifica OpenAPI. Ma una richiesta espressa in linguaggio naturale non rispetta necessariamente in forma esplicita un metodo HTTP, un percorso di un endpoint o la struttura del body da utilizzare, rendendo quindi necessaria una traduzione dell'intenzione dell'utente, ma in una rappresentazione compatibile con la struttura richiesta dal servizio. L'introduzione di un Large Language Model viene considerata per la sua possibile semplificazione della traduzione, dovendo però fare attenzione alla coerenza, rispetto allo schema richiesto, delle chiamate prodotte. Gli esperimenti preliminari svolti proprio con questo obiettivo hanno infatti dimostrato incoerenza rispetto ad endpoint restituiti, parametri non esistenti nel sistema o nella costruzione di corpi non conformi allo schema richiesto; hanno inoltre mostrato che l'inserimento della specifica OpenAPI in maniera integrale comporti una difficoltà in individuazione di chiamate rilevanti allo scopo previsto, osservabile soprattutto nell'utilizzo di modelli locali più piccoli.
+
+## Paragrafo 3 — Obiettivo della tesi
+
+L'obiettivo che ci si pone in questa tesi è quindi quello di progettare e implementare un componente software che possa tradurre una richiesta in linguaggio naturale in una chiamata REST con un formato valido nell'ambiente del Persistence Service. La pipeline richiesta dal componente è la seguente:
+- Analisi del testo inserito dall'utente, individuando dei "candidati", ovvero individuando le operazioni OpenAPI più compatibili con la  richiesta;
+- Selezione dell'endpoint appropriato da parte del Large Language Model, generando i relativi parametri, distinti tra path parameter, query parameter e un eventuale request body;
+- Validazione, prima dell'esecuzione, della conformità della chiamata prodotta rispetto alla specifica OpenAPI corrente, con segnalazione da parte del sistema in caso di mancanza di informazioni fondamentali, e con controllo su invio di chiamate con endpoint inesistenti o strutture non valide rispetto al contesto;
+- Esecuzione della richiesta, inoltrata poi al Persistence Service;
+- Inoltro della risposta del Persistence Service al client, che provvederà alla sua visualizzazione.
+
+## Paragrafo 4 — Approccio adottato
+
+La soluzione adottata nello svolgimento dell'oggetto di questa tesi è stata sviluppata come un Agent Service che opera indipendentemente dagli altri componenti WLDT, adattando quindi l'agente all'infrastruttura WLDT esistente e non richiedendo modifiche alla logica del Persistence Service. Agent Service viene sviluppato in Python attraverso FastAPI, comunicando con il Persistence Service tramite l'utilizzo delle normali interfacce REST già disponibili nel componente. Per mantenere la portabilità del servizio, la specifica OpenAPI viene recuperata dinamicamente dall'indirizzo esposto nel backend, evitando quindi di utilizzare una copia statica da aggiornare ad ogni modifica della specifica.
+Le operazioni contenute nella specifica vengono trasformate in un catalogo normalizzato, nel quale vengono conservati i componenti essenziali, quali metodi HTTP, path, descrizioni, parametri obbligatori e presenza o meno di request body; prima dell'intervento del modello linguistico, le richieste utente e i metadati delle operazioni verranno confrontati da un selettore deterministico, che restituirà un numero volutamente limitato di candidati, ordinati per punteggio, che verranno contestualmente inseriti nel contesto del prompt inviato al modello locale tramite Ollama.
+Il modello quindi produrrà una struttura JSON contenente la chiamata proposta, che sarà successivamente sottoposta a validazione, che in caso di chiamata valida, proseguirà nell'esecuzione e nella restituzione della risposta.
+
+## Paragrafo 5 — Contributi del lavoro
+
+Il lavoro svolto si organizza in una fase di sperimentazione, una fase progettuale e una fase implementativa. La fase sperimentale è stata affrontata definendo un benchmark composto da richieste significative rispetto alle funzionalità principali offerte dal Persistence Service. 
+Il confronto tra diversi modelli linguistici e differenti modalità costruttive del contesto hanno permesso di osservare limiti nella comprensione completa e coerente dell'OpenAPI integrale, motivando quindi l'introduzione di una selezione di operazioni candidate.
+Il problema di un flusso ristretto, controllato e strettamente dipendente dal contratto OpenAPI WLDT ha portato alla fase di progettazione di una pipeline personalizzata, dominio-specifica per WLDT e orientata a un flusso verificabile e controllabile.
+Il progetto comprende quindi validazioni delle chiamate rispetto al contratto OpenAPI e una suite di test automatici dei diversi componenti presenti.
+La fase implementativa prevede, infine, l'integrazione del servizio Agent Service, esterno e non generalista, in Query Workbench del frontend del contesto, posizionando le richieste in linguaggio naturale in una scheda dedicata. 
