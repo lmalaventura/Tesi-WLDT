@@ -227,3 +227,48 @@ nella costruzione di un prompt contenente soltanto le operazioni candidate.
 
 Implementare il PromptBuilder e l'OllamaClient, definire lo schema JSON della
 chiamata generata e collegare il primo modello locale all'Agent Service.
+
+## 05/08/2026
+
+### Attività svolte
+
+- Implementato il `PromptBuilder`.
+- Limitato il prompt alle operazioni candidate e agli schemi OpenAPI
+  effettivamente referenziati.
+- Definito il modello `GeneratedApiCall`.
+- Implementato il client HTTP per la Chat API di Ollama.
+- Configurata la generazione mediante JSON Schema.
+- Disabilitati streaming e thinking per la risposta elaborata dal servizio.
+- Collegato Ollama all'endpoint `POST /query`.
+- Aggiunti test per costruzione del prompt, parsing e validazione dell'output.
+- Eseguiti tre smoke test reali con Qwen3 8B:
+- elenco dei Digital Twin, completato correttamente;
+- recupero dello snapshot mediante path parameter, completato correttamente;
+- interrogazione storica per intervallo, corretta nella scelta dell’endpoint
+  ma non nella struttura del request body.
+- Avviata la bozza sul contesto tecnologico della tesi.
+
+### Risultati
+
+L’Agent Service è in grado di trasformare la richiesta naturale e le
+operazioni candidate in un prompt ristretto, inviarlo a Qwen3 8B tramite
+Ollama e ottenere una chiamata REST conforme alla struttura generale
+`GeneratedApiCall`.
+
+Le richieste relative all’elenco dei Digital Twin e allo snapshot corrente
+sono state tradotte correttamente.
+
+Nel caso dell’interrogazione storica con intervallo temporale, il modello ha
+selezionato correttamente l’endpoint
+`POST /query/event/values/valuesByName`, ma ha prodotto un oggetto al posto
+dell’array previsto dal request body e ha utilizzato `propertyId` invece di
+`propertyName`.
+
+Il test conferma che la generazione strutturata deve essere seguita da una
+validazione semantica completa rispetto alla specifica OpenAPI.
+
+### Prossimo passo
+
+Implementare la validazione completa della chiamata generata, distinguere
+informazioni mancanti ed errori del modello e collegare il `RestClient` per
+l'invio al Persistence Service.

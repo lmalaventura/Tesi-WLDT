@@ -2,6 +2,11 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services.openapi_loader import get_openapi_loader
+from app.models import GeneratedApiCall
+from app.services.ollama_client import (
+    OllamaGeneration,
+    get_ollama_client,
+)
 
 
 client = TestClient(app)
@@ -43,6 +48,24 @@ class FakeOpenApiLoader:
             },
         }
 
+class FakeOllamaClient:
+    """Client Ollama controllato per i test HTTP."""
+
+    async def generate(self, prompt: object) -> OllamaGeneration:
+        return OllamaGeneration(
+            generated_call=GeneratedApiCall(
+                method="GET",
+                endpoint="/hdts",
+                pathParameters={},
+                queryParameters={},
+                body=None,
+                missingInformation=[],
+            ),
+            model="qwen3:8b",
+            total_duration_ns=1200,
+            prompt_eval_count=300,
+            eval_count=40,
+        )
 
 def test_health() -> None:
     response = client.get("/health")
@@ -55,9 +78,12 @@ def test_health() -> None:
     }
 
 
-def test_query_returns_ranked_candidates() -> None:
+def test_query_returns_generated_call() -> None:
     app.dependency_overrides[get_openapi_loader] = (
         lambda: FakeOpenApiLoader()
+    )
+    app.dependency_overrides[get_ollama_client] = (
+        lambda: FakeOllamaClient()
     )
 
     try:
@@ -76,14 +102,23 @@ def test_query_returns_ranked_candidates() -> None:
 
     data = response.json()
 
-    assert data["status"] == "candidates"
-    assert data["received_query"] == (
-        "Mostrami tutti i Digital Twin disponibili."
-    )
+    assert data["status"] == "generated"
+    assert data["model"] == "qwen3:8b"
     assert data["candidate_count"] >= 1
-    assert data["candidates"][0]["method"] == "GET"
     assert data["candidates"][0]["path"] == "/hdts"
-    assert data["candidates"][0]["score"] > 0
+    assert data["generated_call"] == {
+        "method": "GET",
+        "endpoint": "/hdts",
+        "pathParameters": {},
+        "queryParameters": {},
+        "body": None,
+        "missingInformation": [],
+    }
+    assert data["metrics"] == {
+        "total_duration_ns": 1200,
+        "prompt_eval_count": 300,
+        "eval_count": 40,
+    }
 
 
 def test_query_rejects_empty_text() -> None:

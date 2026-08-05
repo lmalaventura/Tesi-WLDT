@@ -9,6 +9,7 @@ from .models import (
     OpenApiStatusResponse,
     QueryRequest,
     QueryResponse,
+    GenerationMetricsResponse,
 )
 from .services.api_selector import ApiSelector, get_api_selector
 from .services.openapi_catalog import (
@@ -19,6 +20,18 @@ from .services.openapi_loader import (
     OpenApiLoader,
     OpenApiLoadError,
     get_openapi_loader,
+)
+
+from .services.ollama_client import (
+    OllamaClient,
+    OllamaResponseError,
+    OllamaUnavailableError,
+    get_ollama_client,
+)
+from .services.prompt_builder import (
+    PromptBuildError,
+    PromptBuilder,
+    get_prompt_builder,
 )
 
 
@@ -135,10 +148,15 @@ async def openapi_operations(
     tags=["agent"],
     responses={
         500: {
-            "description": "Catalogo OpenAPI non valido.",
+            "description": "Catalogo o prompt non valido.",
+        },
+        502: {
+            "description": "Output del modello non valido.",
         },
         503: {
-            "description": "Persistence Service non disponibile.",
+            "description": (
+                "Persistence Service oppure Ollama non disponibile."
+            ),
         },
     },
 )
@@ -146,8 +164,10 @@ async def process_query(
     payload: QueryRequest,
     loader: OpenApiLoader = Depends(get_openapi_loader),
     selector: ApiSelector = Depends(get_api_selector),
+    prompt_builder: PromptBuilder = Depends(get_prompt_builder),
+    ollama_client: OllamaClient = Depends(get_ollama_client),
 ) -> QueryResponse:
-    """Seleziona le operazioni candidate per la richiesta ricevuta."""
+    """Genera una chiamata REST strutturata tramite il modello locale."""
 
     try:
         document = await loader.load()
@@ -166,8 +186,42 @@ async def process_query(
     ranked_operations = selector.select(
         query=payload.query,
         catalog=catalog,
-        limit=5,
+        limit=3,
     )
+
+    if not ranked_operations:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Nessuna operazione OpenAPI candidata "
+                "per la richiesta ricevuta."
+            ),
+        )
+
+    try:
+        prompt = prompt_builder.build(
+            query=payload.query,
+            candidates=ranked_operations,
+            openapi_document=document,
+        )
+    except PromptBuildError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=str(exc),
+        ) from exc
+
+    try:
+        generation = await ollama_client.generate(prompt)
+    except OllamaUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
+    except OllamaResponseError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=str(exc),
+        ) from exc
 
     candidates = [
         CandidateOperationResponse(
@@ -192,10 +246,17 @@ async def process_query(
 
     return QueryResponse(
         received_query=payload.query,
+        model=generation.model,
         candidate_count=len(candidates),
         candidates=candidates,
+        generated_call=generation.generated_call,
+        metrics=GenerationMetricsResponse(
+            total_duration_ns=generation.total_duration_ns,
+            prompt_eval_count=generation.prompt_eval_count,
+            eval_count=generation.eval_count,
+        ),
         message=(
-            "Operazioni candidate selezionate. "
-            "Il modello LLM non è ancora collegato."
+            "Chiamata REST generata. "
+            "La validazione e l'esecuzione non sono ancora collegate."
         ),
     )

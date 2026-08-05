@@ -131,3 +131,18 @@ contribuito alla selezione.
 Questa fase non produce ancora la chiamata REST definitiva. Il suo scopo è
 ridurre il contesto che verrà fornito al modello LLM e rendere osservabile il
 processo di scelta preliminare.
+
+## Necessità della validazione semantica — 05/08/2026
+
+Gli smoke test hanno mostrato che un output formalmente conforme al modello
+Pydantic generale può comunque risultare non conforme allo schema OpenAPI
+dell’operazione selezionata.
+
+In particolare, il modello ha prodotto un request body con una struttura
+radice errata e ha confuso `propertyName` con `propertyId`, pur scegliendo
+l’endpoint corretto.
+
+È stato quindi confermato che la chiamata generata non deve mai essere
+inoltrata direttamente al Persistence Service. Deve prima essere confrontata
+con metodo, path, parametri e request body definiti nella specifica OpenAPI
+corrente.

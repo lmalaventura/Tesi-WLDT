@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthResponse(BaseModel):
@@ -34,15 +34,56 @@ class CandidateOperationResponse(BaseModel):
     required_query_parameters: list[str]
     request_body_required: bool
 
+class GeneratedApiCall(BaseModel):
+    """Chiamata REST strutturata prodotta dal modello LLM."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    method: Literal[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+        "HEAD",
+        "TRACE",
+    ]
+    endpoint: str
+    path_parameters: dict[str, Any] = Field(
+        default_factory=dict,
+        alias="pathParameters",
+    )
+    query_parameters: dict[str, Any] = Field(
+        default_factory=dict,
+        alias="queryParameters",
+    )
+    body: Any | None = None
+    missing_information: list[str] = Field(
+        default_factory=list,
+        alias="missingInformation",
+    )
+
+
+class GenerationMetricsResponse(BaseModel):
+    """Metriche restituite da Ollama."""
+
+    total_duration_ns: int | None = None
+    prompt_eval_count: int | None = None
+    eval_count: int | None = None
 
 class QueryResponse(BaseModel):
-    """Risposta della fase di selezione delle operazioni candidate."""
+    """Risposta della fase di generazione della chiamata REST."""
 
-    status: Literal["candidates"] = "candidates"
+    status: Literal["generated"] = "generated"
     received_query: str
+    model: str
     candidate_count: int
     candidates: list[CandidateOperationResponse]
+    generated_call: GeneratedApiCall
+    metrics: GenerationMetricsResponse
     message: str
+
 class OpenApiStatusResponse(BaseModel):
     """Informazioni sulla specifica caricata dal Persistence Service."""
 

@@ -76,3 +76,24 @@ i campi mancanti.
 Questo documento descrive l'output interno dell'LLM. La risposta HTTP esposta
 al frontend include anche stato, risultato del Persistence Service ed
 informazioni sull'errore, come definito in `integrazione_wldt.md`.
+
+## Limiti della generazione strutturata
+
+La conformità dell’output al modello `GeneratedApiCall` garantisce soltanto
+che la risposta possieda i campi generali richiesti dall’Agent Service.
+
+Non garantisce invece che il contenuto del campo `body` rispetti lo schema
+specifico dell’operazione OpenAPI selezionata.
+
+Durante uno smoke test relativo a una richiesta storica con intervallo
+temporale, il modello ha selezionato correttamente l’endpoint
+`POST /query/event/values/valuesByName`, ma ha generato un oggetto JSON al
+posto dell’array richiesto dal request body.
+
+Il modello ha inoltre utilizzato il campo `propertyId` per un valore che
+rappresentava il nome della proprietà e che avrebbe quindi dovuto essere
+inserito in `propertyName`.
+
+Questo risultato mostra che l’uso di un JSON Schema generale per l’output non
+rende superflua la validazione semantica rispetto alla specifica OpenAPI della
+singola operazione.
