@@ -10,6 +10,8 @@ from .models import (
     QueryRequest,
     QueryResponse,
     GenerationMetricsResponse,
+    ValidationIssueResponse,
+    ValidationResponse,
 )
 from .services.api_selector import ApiSelector, get_api_selector
 from .services.openapi_catalog import (
@@ -32,6 +34,11 @@ from .services.prompt_builder import (
     PromptBuildError,
     PromptBuilder,
     get_prompt_builder,
+)
+
+from .services.api_call_validator import (
+    ApiCallValidator,
+    get_api_call_validator,
 )
 
 
@@ -166,6 +173,9 @@ async def process_query(
     selector: ApiSelector = Depends(get_api_selector),
     prompt_builder: PromptBuilder = Depends(get_prompt_builder),
     ollama_client: OllamaClient = Depends(get_ollama_client),
+    validator: ApiCallValidator = Depends(
+    get_api_call_validator
+    ),
 ) -> QueryResponse:
     """Genera una chiamata REST strutturata tramite il modello locale."""
 
@@ -223,6 +233,50 @@ async def process_query(
             detail=str(exc),
         ) from exc
 
+    if generation.generated_call.missing_information:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": (
+                    "La richiesta non contiene tutte "
+                    "le informazioni necessarie."
+                ),
+                "missing_information": (
+                    generation.generated_call.missing_information
+                ),
+            },
+        )
+
+    validation = validator.validate(
+        generated_call=generation.generated_call,
+        candidates=ranked_operations,
+        openapi_document=document,
+    )
+
+    if not validation.valid:
+        raise HTTPException(
+            status_code=502,
+              detail={
+                   "message": (
+                       "La chiamata generata non rispetta "
+                       "la specifica OpenAPI."
+                    ),
+                    "issues": [
+                        {
+                            "code": issue.code,
+                            "location": issue.location,
+                            "message": issue.message,
+                        }
+                        for issue in validation.issues
+                    ],
+                    "generated_call": (
+                        generation.generated_call.model_dump(
+                            by_alias=True
+                        )
+                    ),
+                },
+            )
+
     candidates = [
         CandidateOperationResponse(
             method=candidate.operation.method,
@@ -250,13 +304,27 @@ async def process_query(
         candidate_count=len(candidates),
         candidates=candidates,
         generated_call=generation.generated_call,
+        validation=ValidationResponse(
+            valid=True,
+            method=generation.generated_call.method,
+            endpoint=generation.generated_call.endpoint,
+            issues=[
+                ValidationIssueResponse(
+                    code=issue.code,
+                    location=issue.location,
+                    message=issue.message,
+                )
+                for issue in validation.issues
+            ],
+        ),
         metrics=GenerationMetricsResponse(
             total_duration_ns=generation.total_duration_ns,
             prompt_eval_count=generation.prompt_eval_count,
             eval_count=generation.eval_count,
         ),
         message=(
-            "Chiamata REST generata. "
-            "La validazione e l'esecuzione non sono ancora collegate."
+            "Chiamata REST generata e validata. "
+            "L'esecuzione verso il Persistence Service "
+            "non è ancora collegata."
         ),
     )

@@ -7,18 +7,18 @@ naturale in chiamate REST verso il Persistence Service WLDT.
 
 L'Agent Service:
 
-- recupera dinamicamente la specifica OpenAPI dal Persistence Service;
-- costruisce un catalogo normalizzato delle operazioni REST;
-- analizza la richiesta in linguaggio naturale;
-- restituisce un elenco ordinato di operazioni candidate.
+- recupera dinamicamente la specifica OpenAPI;
+- costruisce un catalogo normalizzato delle operazioni;
+- seleziona le operazioni candidate rispetto alla richiesta dell'utente;
+- costruisce un prompt limitato ai candidati e agli schemi referenziati;
+- interroga un modello locale tramite Ollama;
+- richiede un output conforme a un JSON Schema generale;
+- valida metodo, endpoint, parametri e request body rispetto all'OpenAPI;
+- blocca le chiamate semanticamente non conformi;
+- prepara l'URL finale, i query parameter e il body della richiesta HTTP.
 
-La selezione utilizza path, operationId, descrizioni, tag e parametri
-dell'OpenAPI. Il modello LLM, la validazione finale e l'esecuzione della
-chiamata REST non sono ancora collegati.
-
-Quando il Persistence Service non è raggiungibile, gli endpoint che dipendono
-dalla specifica OpenAPI restituiscono `503 Service Unavailable`.
-
+L'esecuzione effettiva verso il Persistence Service e la gestione della
+relativa risposta non sono ancora collegate.
 
 ## Avvio
 

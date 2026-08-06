@@ -66,6 +66,25 @@ class FakeOllamaClient:
             prompt_eval_count=300,
             eval_count=40,
         )
+    
+class FakeInvalidOllamaClient:
+    """Produce intenzionalmente una chiamata non candidata."""
+
+    async def generate(self, prompt: object) -> OllamaGeneration:
+        return OllamaGeneration(
+            generated_call=GeneratedApiCall(
+                method="POST",
+                endpoint="/hdts",
+                pathParameters={},
+                queryParameters={},
+                body={},
+                missingInformation=[],
+            ),
+            model="qwen3:8b",
+            total_duration_ns=1200,
+            prompt_eval_count=300,
+            eval_count=40,
+        )
 
 def test_health() -> None:
     response = client.get("/health")
@@ -78,7 +97,7 @@ def test_health() -> None:
     }
 
 
-def test_query_returns_generated_call() -> None:
+def test_query_returns_validated_call() -> None:
     app.dependency_overrides[get_openapi_loader] = (
         lambda: FakeOpenApiLoader()
     )
@@ -102,7 +121,7 @@ def test_query_returns_generated_call() -> None:
 
     data = response.json()
 
-    assert data["status"] == "generated"
+    assert data["status"] == "validated"
     assert data["model"] == "qwen3:8b"
     assert data["candidate_count"] >= 1
     assert data["candidates"][0]["path"] == "/hdts"
@@ -114,12 +133,49 @@ def test_query_returns_generated_call() -> None:
         "body": None,
         "missingInformation": [],
     }
+    assert data["validation"] == {
+    "valid": True,
+    "method": "GET",
+    "endpoint": "/hdts",
+    "issues": [],
+    }
     assert data["metrics"] == {
         "total_duration_ns": 1200,
         "prompt_eval_count": 300,
         "eval_count": 40,
     }
 
+def test_query_rejects_semantically_invalid_call() -> None:
+    app.dependency_overrides[get_openapi_loader] = (
+        lambda: FakeOpenApiLoader()
+    )
+    app.dependency_overrides[get_ollama_client] = (
+        lambda: FakeInvalidOllamaClient()
+    )
+
+    try:
+        response = client.post(
+            "/query",
+            json={
+                "query": (
+                    "Mostrami tutti i Digital Twin disponibili."
+                ),
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 502
+
+    detail = response.json()["detail"]
+
+    assert detail["message"] == (
+        "La chiamata generata non rispetta "
+        "la specifica OpenAPI."
+    )
+    assert detail["issues"][0]["code"] == (
+        "operation_not_candidate"
+    )
 
 def test_query_rejects_empty_text() -> None:
     response = client.post(

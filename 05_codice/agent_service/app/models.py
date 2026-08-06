@@ -72,15 +72,32 @@ class GenerationMetricsResponse(BaseModel):
     prompt_eval_count: int | None = None
     eval_count: int | None = None
 
-class QueryResponse(BaseModel):
-    """Risposta della fase di generazione della chiamata REST."""
+class ValidationIssueResponse(BaseModel):
+    """Problema individuato durante la validazione della chiamata."""
 
-    status: Literal["generated"] = "generated"
+    code: str
+    location: str
+    message: str
+
+
+class ValidationResponse(BaseModel):
+    """Esito della validazione rispetto alla specifica OpenAPI."""
+
+    valid: bool
+    method: str
+    endpoint: str
+    issues: list[ValidationIssueResponse]
+
+class QueryResponse(BaseModel):
+    """Risposta della generazione e validazione della chiamata REST."""
+
+    status: Literal["validated"] = "validated"
     received_query: str
     model: str
     candidate_count: int
     candidates: list[CandidateOperationResponse]
     generated_call: GeneratedApiCall
+    validation: ValidationResponse
     metrics: GenerationMetricsResponse
     message: str
 

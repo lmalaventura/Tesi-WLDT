@@ -272,3 +272,57 @@ validazione semantica completa rispetto alla specifica OpenAPI.
 Implementare la validazione completa della chiamata generata, distinguere
 informazioni mancanti ed errori del modello e collegare il `RestClient` per
 l'invio al Persistence Service.
+
+## 06/08/2026
+
+### Attività svolte
+
+- Implementato il validatore deterministico delle chiamate generate.
+- Verificata la corrispondenza tra metodo, endpoint e operazioni candidate.
+- Introdotti i controlli sui path parameter e sui query parameter.
+- Implementata la validazione del request body rispetto agli schemi OpenAPI.
+- Gestita la risoluzione dei riferimenti locali `$ref`.
+- Aggiunti controlli su oggetti, array, tipi, enumerazioni e date-time.
+- Introdotta la distinzione semantica tra operazioni `byName` e `byId`.
+- Collegato il validatore all'endpoint `POST /query`.
+- Bloccati gli output semanticamente non validi prima dell'esecuzione.
+- Eseguiti smoke test reali con Qwen3 8B.
+- Verificata una chiamata valida relativa all'elenco dei Digital Twin.
+- Verificato il rifiuto della chiamata storica con body non conforme.
+- Aggiunta la dipendenza di sviluppo `httpx2` per rimuovere il warning del
+  `TestClient`.
+- Implementato l'`ApiRequestPreparer`.
+- Aggiunta la sostituzione e la codifica sicura dei path parameter.
+- Separata la preparazione della richiesta dalla futura esecuzione HTTP.
+- Portata la suite automatica a 32 test senza warning.
+- Avviata la bozza della tesi sulla validazione e sull'affidabilità.
+
+### Risultati
+
+Una chiamata generata dal modello viene ora considerata utilizzabile soltanto
+se metodo ed endpoint corrispondono a una delle operazioni candidate e se
+parametri e request body rispettano la specifica OpenAPI corrente.
+
+La richiesta relativa all'elenco dei Digital Twin ha prodotto la chiamata
+`GET /hdts`, che ha superato correttamente la validazione.
+
+Lo smoke test storico, che in precedenza produceva un falso risultato `200`,
+è stato correttamente bloccato con errore `502`. Il validatore ha rilevato
+sia l'impiego di un oggetto al posto dell'array previsto sia l'utilizzo di
+`propertyId` al posto di `propertyName`.
+
+Le chiamate valide possono inoltre essere trasformate in richieste HTTP
+concrete. L'`ApiRequestPreparer` combina il base URL con il path, sostituisce
+i placeholder e conserva separatamente query parameter e request body.
+
+La richiesta risultante non viene ancora eseguita verso il Persistence
+Service.
+
+### Prossimo passo
+
+Implementare il `RestClient`, utilizzare le richieste prodotte
+dall'`ApiRequestPreparer` ed eseguire la chiamata HTTP soltanto dopo il
+superamento della validazione.
+
+Successivamente dovranno essere gestiti status code, contenuto e possibili
+errori restituiti dal Persistence Service.

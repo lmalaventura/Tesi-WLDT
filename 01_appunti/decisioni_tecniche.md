@@ -146,3 +146,48 @@ l’endpoint corretto.
 inoltrata direttamente al Persistence Service. Deve prima essere confrontata
 con metodo, path, parametri e request body definiti nella specifica OpenAPI
 corrente.
+
+## Rifiuto degli output semanticamente non validi — 06/08/2026
+
+È stato scelto di non correggere automaticamente le chiamate prodotte dal
+modello linguistico.
+
+Quando metodo, endpoint, parametri o request body non rispettano la specifica
+OpenAPI, il validatore restituisce un insieme di problemi strutturati e
+l'endpoint `POST /query` interrompe la pipeline con un errore `502`.
+
+Una correzione automatica potrebbe nascondere un errore del modello oppure
+alterare l'intenzione originale dell'utente. Il rifiuto mantiene invece
+separate la generazione probabilistica della chiamata e la sua verifica
+deterministica.
+
+## Separazione tra validazione, preparazione ed esecuzione — 06/08/2026
+
+La costruzione della richiesta HTTP è stata separata dalla validazione e
+dalla futura esecuzione.
+
+Il componente `ApiCallValidator` stabilisce se la chiamata generata è
+compatibile con la specifica OpenAPI. Soltanto dopo il superamento di questo
+controllo, l'`ApiRequestPreparer` sostituisce i placeholder del path,
+codifica i relativi valori e combina l'endpoint con il base URL del
+Persistence Service.
+
+La richiesta risultante conserva separatamente metodo HTTP, URL, query
+parameter e body. L'invio effettivo verrà affidato a un `RestClient`
+dedicato.
+
+Questa separazione consente di testare individualmente le diverse
+responsabilità e impedisce che una chiamata non validata venga eseguita
+accidentalmente.
+
+## Aggiornamento del backend del TestClient — 06/08/2026
+
+È stata aggiunta la dipendenza di sviluppo `httpx2` per eliminare il warning
+di deprecazione prodotto dal `TestClient` di Starlette.
+
+La dipendenza applicativa `httpx` è stata mantenuta, poiché viene utilizzata
+direttamente dall'Agent Service per le comunicazioni HTTP con Ollama e con
+gli altri servizi.
+
+La modifica riguarda quindi esclusivamente l'ambiente di test e non altera
+il comportamento dell'applicazione.
