@@ -12,6 +12,8 @@ from .models import (
     GenerationMetricsResponse,
     ValidationIssueResponse,
     ValidationResponse,
+    PersistenceServiceResponse,
+    PreparedRequestResponse,
 )
 from .services.api_selector import ApiSelector, get_api_selector
 from .services.openapi_catalog import (
@@ -39,6 +41,18 @@ from .services.prompt_builder import (
 from .services.api_call_validator import (
     ApiCallValidator,
     get_api_call_validator,
+)
+
+from .services.api_request_preparer import (
+    ApiRequestPreparer,
+    RequestPreparationError,
+    get_api_request_preparer,
+)
+
+from .services.rest_client import (
+    PersistenceUnavailableError,
+    RestClient,
+    get_rest_client,
 )
 
 
@@ -162,7 +176,8 @@ async def openapi_operations(
         },
         503: {
             "description": (
-                "Persistence Service oppure Ollama non disponibile."
+            "OpenAPI, Ollama oppure Persistence Service "
+            "non disponibile."
             ),
         },
     },
@@ -176,6 +191,11 @@ async def process_query(
     validator: ApiCallValidator = Depends(
     get_api_call_validator
     ),
+    settings: Settings = Depends(get_settings),
+    request_preparer: ApiRequestPreparer = Depends(
+    get_api_request_preparer
+    ),
+    rest_client: RestClient = Depends(get_rest_client),
 ) -> QueryResponse:
     """Genera una chiamata REST strutturata tramite il modello locale."""
 
@@ -276,6 +296,29 @@ async def process_query(
                     ),
                 },
             )
+    try:
+        prepared_request = request_preparer.prepare(
+            generated_call=generation.generated_call,
+            base_url=settings.persistence_service_base_url,
+        )
+    except RequestPreparationError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Impossibile preparare la richiesta HTTP: "
+                f"{exc}"
+            ),
+        ) from exc
+
+    try:
+        persistence_response = await rest_client.execute(
+            prepared_request
+        )
+    except PersistenceUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
 
     candidates = [
         CandidateOperationResponse(
@@ -317,14 +360,26 @@ async def process_query(
                 for issue in validation.issues
             ],
         ),
+        prepared_request=PreparedRequestResponse(
+            method=prepared_request.method,
+            url=prepared_request.url,
+            query_parameters=(
+                prepared_request.query_parameters
+            ),
+            body=prepared_request.body,
+        ),
+        persistence_response=PersistenceServiceResponse(
+            status_code=persistence_response.status_code,
+            content_type=persistence_response.content_type,
+            body=persistence_response.body,
+        ),
         metrics=GenerationMetricsResponse(
             total_duration_ns=generation.total_duration_ns,
             prompt_eval_count=generation.prompt_eval_count,
             eval_count=generation.eval_count,
         ),
         message=(
-            "Chiamata REST generata e validata. "
-            "L'esecuzione verso il Persistence Service "
-            "non è ancora collegata."
+            "Chiamata REST generata, validata ed eseguita "
+            "verso il Persistence Service."
         ),
     )

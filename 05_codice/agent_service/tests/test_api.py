@@ -7,6 +7,14 @@ from app.services.ollama_client import (
     OllamaGeneration,
     get_ollama_client,
 )
+from app.services.api_request_preparer import (
+    PreparedApiRequest,
+)
+from app.services.rest_client import (
+    PersistenceUnavailableError,
+    RestExecution,
+    get_rest_client,
+)
 
 
 client = TestClient(app)
@@ -66,6 +74,55 @@ class FakeOllamaClient:
             prompt_eval_count=300,
             eval_count=40,
         )
+
+class FakeRestClient:
+    """Persistence Service simulato per i test HTTP."""
+
+    async def execute(
+        self,
+        request: PreparedApiRequest,
+    ) -> RestExecution:
+        assert request.method == "GET"
+        assert request.url == (
+            "http://localhost:8081/hdts"
+        )
+
+        return RestExecution(
+            status_code=200,
+            content_type="application/json",
+            body=[
+                {
+                    "id": "HDT-001",
+                }
+            ],
+        )
+
+class FakeUnavailableRestClient:
+    """Simula l'indisponibilità del Persistence Service."""
+
+    async def execute(
+        self,
+        request: PreparedApiRequest,
+    ) -> RestExecution:
+        raise PersistenceUnavailableError(
+            "Impossibile comunicare con il "
+            "Persistence Service."
+        )
+
+class FakeNotFoundRestClient:
+    """Simula una risposta HTTP 404 del backend."""
+
+    async def execute(
+        self,
+        request: PreparedApiRequest,
+    ) -> RestExecution:
+        return RestExecution(
+            status_code=404,
+            content_type="application/json",
+            body={
+                "message": "HDT not found",
+            },
+        )    
     
 class FakeInvalidOllamaClient:
     """Produce intenzionalmente una chiamata non candidata."""
@@ -97,12 +154,15 @@ def test_health() -> None:
     }
 
 
-def test_query_returns_validated_call() -> None:
+def test_query_executes_validated_call() -> None:
     app.dependency_overrides[get_openapi_loader] = (
         lambda: FakeOpenApiLoader()
     )
     app.dependency_overrides[get_ollama_client] = (
         lambda: FakeOllamaClient()
+    )
+    app.dependency_overrides[get_rest_client] = (
+    lambda: FakeRestClient()
     )
 
     try:
@@ -121,7 +181,7 @@ def test_query_returns_validated_call() -> None:
 
     data = response.json()
 
-    assert data["status"] == "validated"
+    assert data["status"] == "executed"
     assert data["model"] == "qwen3:8b"
     assert data["candidate_count"] >= 1
     assert data["candidates"][0]["path"] == "/hdts"
@@ -143,6 +203,22 @@ def test_query_returns_validated_call() -> None:
         "total_duration_ns": 1200,
         "prompt_eval_count": 300,
         "eval_count": 40,
+    }
+    assert data["prepared_request"] == {
+        "method": "GET",
+        "url": "http://localhost:8081/hdts",
+        "query_parameters": {},
+        "body": None,
+    }
+
+    assert data["persistence_response"] == {
+        "status_code": 200,
+        "content_type": "application/json",
+        "body": [
+            {
+                "id": "HDT-001",
+            }
+        ],
     }
 
 def test_query_rejects_semantically_invalid_call() -> None:
@@ -228,3 +304,68 @@ def test_openapi_operations() -> None:
     assert data["operations"][1]["path"] == (
         "/hdts/{id}/snapshot"
     )
+
+def test_query_reports_persistence_unavailable() -> None:
+    app.dependency_overrides[get_openapi_loader] = (
+        lambda: FakeOpenApiLoader()
+    )
+    app.dependency_overrides[get_ollama_client] = (
+        lambda: FakeOllamaClient()
+    )
+    app.dependency_overrides[get_rest_client] = (
+        lambda: FakeUnavailableRestClient()
+    )
+
+    try:
+        response = client.post(
+            "/query",
+            json={
+                "query": (
+                    "Mostrami tutti i Digital Twin disponibili."
+                ),
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == (
+        "Impossibile comunicare con il "
+        "Persistence Service."
+    )
+
+def test_query_preserves_persistence_error_response() -> None:
+    app.dependency_overrides[get_openapi_loader] = (
+        lambda: FakeOpenApiLoader()
+    )
+    app.dependency_overrides[get_ollama_client] = (
+        lambda: FakeOllamaClient()
+    )
+    app.dependency_overrides[get_rest_client] = (
+        lambda: FakeNotFoundRestClient()
+    )
+
+    try:
+        response = client.post(
+            "/query",
+            json={
+                "query": (
+                    "Mostrami tutti i Digital Twin disponibili."
+                ),
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["status"] == "executed"
+    assert data["persistence_response"] == {
+        "status_code": 404,
+        "content_type": "application/json",
+        "body": {
+            "message": "HDT not found",
+        },
+    }

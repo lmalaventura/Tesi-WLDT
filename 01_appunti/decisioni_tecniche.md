@@ -191,3 +191,19 @@ gli altri servizi.
 
 La modifica riguarda quindi esclusivamente l'ambiente di test e non altera
 il comportamento dell'applicazione.
+
+## Separazione tra errori HTTP e indisponibilità del backend — 09/08/2026
+
+Il `RestClient` non trasforma automaticamente gli status code `4xx` e `5xx`
+del Persistence Service in errori interni dell'Agent Service.
+
+Una risposta HTTP ricevuta dal backend rappresenta infatti un'esecuzione
+avvenuta, anche quando segnala che una risorsa non esiste o che la richiesta
+non può essere soddisfatta.
+
+L'Agent Service conserva quindi status code, content type e body della
+risposta.
+
+Gli errori di trasporto vengono gestiti separatamente. Se il Persistence
+Service non è raggiungibile, l'Agent Service interrompe la pipeline con
+`503 Service Unavailable`.

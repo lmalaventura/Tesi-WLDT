@@ -326,3 +326,52 @@ superamento della validazione.
 
 Successivamente dovranno essere gestiti status code, contenuto e possibili
 errori restituiti dal Persistence Service.
+
+## 09/08/2026
+
+### Attività svolte
+
+- Implementato il `RestClient`.
+- Collegata l'esecuzione HTTP alle richieste prodotte
+  dall'`ApiRequestPreparer`.
+- Gestiti separatamente query parameter e request body.
+- Implementata la lettura delle risposte JSON del Persistence Service.
+- Mantenuti gli status code restituiti dal backend.
+- Distinti gli errori HTTP dagli errori di trasporto.
+- Collegata l'esecuzione all'endpoint `POST /query`.
+- Estesa la risposta dell'Agent Service con richiesta preparata e risposta
+  del Persistence Service.
+- Aggiunti test unitari del `RestClient`.
+- Aggiunti test di orchestrazione dell'intera pipeline.
+- Portata la suite automatica a 38 test.
+- Verificato il comportamento in caso di Persistence Service non
+  raggiungibile.
+
+### Risultati
+
+La pipeline dell'Agent Service è ora completa dal punto di vista
+dell'orchestrazione:
+
+richiesta naturale
+→ caricamento OpenAPI
+→ selezione dei candidati
+→ generazione mediante LLM
+→ validazione deterministica
+→ preparazione della richiesta HTTP
+→ esecuzione tramite `RestClient`
+→ restituzione della risposta al client.
+
+Il comportamento positivo dell'esecuzione è verificato attraverso test con
+un Persistence Service simulato.
+
+L'esecuzione contro l'ambiente WLDT reale rimane dipendente dalla
+disponibilità dell'infrastruttura necessaria.
+
+### Prossimo passo
+
+Eseguire un benchmark della pipeline completa, consolidare la
+documentazione tecnica e verificare l'integrazione reale appena sarà
+disponibile l'ambiente WLDT.
+
+Valutare inoltre l'integrazione minima dell'Agent Service nel Query
+Workbench del frontend.

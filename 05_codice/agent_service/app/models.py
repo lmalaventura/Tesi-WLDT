@@ -88,16 +88,34 @@ class ValidationResponse(BaseModel):
     endpoint: str
     issues: list[ValidationIssueResponse]
 
-class QueryResponse(BaseModel):
-    """Risposta della generazione e validazione della chiamata REST."""
+class PreparedRequestResponse(BaseModel):
+    """Richiesta HTTP concreta preparata per il Persistence Service."""
 
-    status: Literal["validated"] = "validated"
+    method: str
+    url: str
+    query_parameters: dict[str, Any]
+    body: Any | None = None
+
+
+class PersistenceServiceResponse(BaseModel):
+    """Risposta ricevuta dal Persistence Service."""
+
+    status_code: int
+    content_type: str | None = None
+    body: Any | None = None
+
+class QueryResponse(BaseModel):
+    """Risposta dell'intera pipeline dell'Agent Service."""
+
+    status: Literal["executed"] = "executed"
     received_query: str
     model: str
     candidate_count: int
     candidates: list[CandidateOperationResponse]
     generated_call: GeneratedApiCall
     validation: ValidationResponse
+    prepared_request: PreparedRequestResponse
+    persistence_response: PersistenceServiceResponse
     metrics: GenerationMetricsResponse
     message: str
 
