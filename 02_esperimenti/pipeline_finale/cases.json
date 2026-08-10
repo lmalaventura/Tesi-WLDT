@@ -1,0 +1,91 @@
+[
+  {
+    "id": "Q1",
+    "name": "Elenco Digital Twin",
+    "query": "Mostrami tutti i Digital Twin disponibili.",
+    "expected": {
+      "method": "GET",
+      "endpoint": "/hdts",
+      "pathParameters": {},
+      "queryParameters": {},
+      "body": null,
+      "missingInformation": []
+    }
+  },
+  {
+    "id": "Q2",
+    "name": "Snapshot corrente",
+    "query": "Mostrami il valore corrente delle proprietà del Digital Twin con id \"HDT-001\".",
+    "expected": {
+      "method": "GET",
+      "endpoint": "/hdts/{id}/snapshot",
+      "pathParameters": {
+        "id": "HDT-001"
+      },
+      "queryParameters": {},
+      "body": null,
+      "missingInformation": []
+    }
+  },
+  {
+    "id": "Q3",
+    "name": "Storico in un intervallo",
+    "query": "Mostrami i valori della proprietà \"heartRate\" del Digital Twin \"HDT-001\" dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+    "expected": {
+      "method": "POST",
+      "endpoint": "/query/event/values/valuesByName",
+      "pathParameters": {},
+      "queryParameters": {},
+      "body": [
+        {
+          "hdtId": "HDT-001",
+          "propertyName": "heartRate",
+          "from": "2026-07-01T00:00:00Z",
+          "to": "2026-07-08T00:00:00Z"
+        }
+      ],
+      "missingInformation": []
+    }
+  },
+  {
+    "id": "Q4",
+    "name": "Confronto",
+    "query": "Trova i Digital Twin che hanno almeno un'osservazione della proprietà \"systolicPressure\" maggiore di 150.",
+    "expected": {
+      "method": "POST",
+      "endpoint": "/query/event/comparison",
+      "pathParameters": {},
+      "queryParameters": {},
+      "body": {
+        "comparisons": [
+          {
+            "propertyName": "systolicPressure",
+            "comparison": "GT",
+            "value": 150
+          }
+        ]
+      },
+      "missingInformation": []
+    }
+  },
+  {
+    "id": "Q5",
+    "name": "Statistiche senza filtri su HDT o modello",
+    "query": "Calcola count, media, minimo e massimo della proprietà \"heartRate\" per tutti i Digital Twin dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+    "expected": {
+      "method": "POST",
+      "endpoint": "/query/event/stats",
+      "pathParameters": {},
+      "queryParameters": {},
+      "body": {
+        "hdtIds": [],
+        "modelIds": [],
+        "modelNames": [],
+        "propertyName": "heartRate",
+        "from": "2026-07-01T00:00:00Z",
+        "to": "2026-07-08T00:00:00Z"
+      },
+      "missingInformation": []
+    }
+  }
+]

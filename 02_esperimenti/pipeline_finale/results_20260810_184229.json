@@ -1,0 +1,579 @@
+{
+  "benchmark": "WLDT Agent Service - pipeline finale",
+  "created_at": "2026-08-10T18:44:39.189712+02:00",
+  "runs_per_case": 1,
+  "case_count": 5,
+  "summary": {
+    "total_runs": 5,
+    "successful_runs": 3,
+    "success_rate": 0.6,
+    "correct_operations": 3,
+    "operation_accuracy": 0.6,
+    "http_200_runs": 3,
+    "average_wall_time_seconds": 25.985
+  },
+  "results": [
+    {
+      "case_id": "Q1",
+      "case_name": "Elenco Digital Twin",
+      "run": 1,
+      "query": "Mostrami tutti i Digital Twin disponibili.",
+      "expected_method": "GET",
+      "expected_endpoint": "/hdts",
+      "agent_status_code": 200,
+      "wall_time_seconds": 46.51,
+      "response": {
+        "status": "executed",
+        "received_query": "Mostrami tutti i Digital Twin disponibili.",
+        "model": "qwen3:8b",
+        "candidate_count": 3,
+        "candidates": [
+          {
+            "method": "GET",
+            "path": "/hdts",
+            "operation_id": "hdts/get",
+            "summary": "List HDTs",
+            "score": 19,
+            "matched_terms": [
+              "all",
+              "digital",
+              "hdts",
+              "list"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": false
+          },
+          {
+            "method": "POST",
+            "path": "/hdts",
+            "operation_id": "hdts/post",
+            "summary": "Create HDT",
+            "score": 11,
+            "matched_terms": [
+              "digital",
+              "hdt",
+              "hdts",
+              "twin"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": true
+          },
+          {
+            "method": "PUT",
+            "path": "/hdts",
+            "operation_id": "hdts/put",
+            "summary": "Create or Update HDT",
+            "score": 11,
+            "matched_terms": [
+              "digital",
+              "hdt",
+              "hdts",
+              "twin"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": true
+          }
+        ],
+        "generated_call": {
+          "method": "GET",
+          "endpoint": "/hdts",
+          "pathParameters": {},
+          "queryParameters": {},
+          "body": null,
+          "missingInformation": []
+        },
+        "validation": {
+          "valid": true,
+          "method": "GET",
+          "endpoint": "/hdts",
+          "issues": []
+        },
+        "prepared_request": {
+          "method": "GET",
+          "url": "http://127.0.0.1:8081/hdts",
+          "query_parameters": {},
+          "body": null
+        },
+        "persistence_response": {
+          "status_code": 200,
+          "content_type": "application/json",
+          "body": [
+            {
+              "id": "HDT-001"
+            },
+            {
+              "id": "HDT-002"
+            }
+          ]
+        },
+        "metrics": {
+          "total_duration_ns": 46249031400,
+          "prompt_eval_count": 3538,
+          "eval_count": 42
+        },
+        "message": "Chiamata REST generata, validata ed eseguita verso il Persistence Service."
+      },
+      "actual_method": "GET",
+      "actual_endpoint": "/hdts",
+      "operation_correct": true,
+      "expected_candidate_rank": 1,
+      "validation_valid": true,
+      "generated_call": {
+        "method": "GET",
+        "endpoint": "/hdts",
+        "pathParameters": {},
+        "queryParameters": {},
+        "body": null,
+        "missingInformation": []
+      },
+      "prepared_request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8081/hdts",
+        "query_parameters": {},
+        "body": null
+      },
+      "persistence_response": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "body": [
+          {
+            "id": "HDT-001"
+          },
+          {
+            "id": "HDT-002"
+          }
+        ]
+      },
+      "model": "qwen3:8b",
+      "total_duration_ns": 46249031400,
+      "prompt_eval_count": 3538,
+      "eval_count": 42,
+      "success": true
+    },
+    {
+      "case_id": "Q2",
+      "case_name": "Snapshot corrente",
+      "run": 1,
+      "query": "Mostrami il valore corrente delle proprietà del Digital Twin con id \"HDT-001\".",
+      "expected_method": "GET",
+      "expected_endpoint": "/hdts/{id}/snapshot",
+      "agent_status_code": 502,
+      "wall_time_seconds": 14.913,
+      "response": {
+        "detail": {
+          "message": "La chiamata generata non rispetta la specifica OpenAPI.",
+          "issues": [
+            {
+              "code": "operation_not_candidate",
+              "location": "method, endpoint",
+              "message": "Il metodo e l'endpoint generati non corrispondono a una delle operazioni candidate."
+            }
+          ],
+          "generated_call": {
+            "method": "GET",
+            "endpoint": "/hdts/HDT-001/snapshot",
+            "pathParameters": {
+              "id": "HDT-001"
+            },
+            "queryParameters": {},
+            "body": null,
+            "missingInformation": []
+          }
+        }
+      },
+      "success": false,
+      "operation_correct": false
+    },
+    {
+      "case_id": "Q3",
+      "case_name": "Storico in un intervallo",
+      "run": 1,
+      "query": "Mostrami i valori della proprietà \"heartRate\" del Digital Twin \"HDT-001\" dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+      "expected_method": "POST",
+      "expected_endpoint": "/query/event/values/valuesByName",
+      "agent_status_code": 502,
+      "wall_time_seconds": 23.42,
+      "response": {
+        "detail": {
+          "message": "La chiamata generata non rispetta la specifica OpenAPI.",
+          "issues": [
+            {
+              "code": "type_mismatch",
+              "location": "body",
+              "message": "Era atteso un valore di tipo 'array'."
+            }
+          ],
+          "generated_call": {
+            "method": "POST",
+            "endpoint": "/query/event/values/valuesByName",
+            "pathParameters": {},
+            "queryParameters": {},
+            "body": {
+              "hdtId": "HDT-001",
+              "propertyId": null,
+              "propertyName": "heartRate",
+              "from": "2026-07-01T00:00:00Z",
+              "to": "2026-07-08T00:00:00Z"
+            },
+            "missingInformation": []
+          }
+        }
+      },
+      "success": false,
+      "operation_correct": false
+    },
+    {
+      "case_id": "Q4",
+      "case_name": "Confronto",
+      "run": 1,
+      "query": "Trova i Digital Twin che hanno almeno un'osservazione della proprietà \"systolicPressure\" maggiore di 150.",
+      "expected_method": "POST",
+      "expected_endpoint": "/query/event/comparison",
+      "agent_status_code": 200,
+      "wall_time_seconds": 19.397,
+      "response": {
+        "status": "executed",
+        "received_query": "Trova i Digital Twin che hanno almeno un'osservazione della proprietà \"systolicPressure\" maggiore di 150.",
+        "model": "qwen3:8b",
+        "candidate_count": 3,
+        "candidates": [
+          {
+            "method": "POST",
+            "path": "/query/event/comparison",
+            "operation_id": "query/event/comparison",
+            "summary": "Query Observations by comparisons",
+            "score": 30,
+            "matched_terms": [
+              "comparison"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": false
+          },
+          {
+            "method": "POST",
+            "path": "/query/cohort",
+            "operation_id": "query/cohort",
+            "summary": "Query cohort frame (per-DT values + stats + population summary) by comparisons",
+            "score": 24,
+            "matched_terms": [],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": false
+          },
+          {
+            "method": "PUT",
+            "path": "/hdts/{id}/properties/{propertyId}/tags",
+            "operation_id": "properties/{propertyId}/tags/put",
+            "summary": "Replace Property tags",
+            "score": 18,
+            "matched_terms": [
+              "hdts",
+              "properties",
+              "property"
+            ],
+            "required_path_parameters": [
+              "id",
+              "propertyId"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": true
+          }
+        ],
+        "generated_call": {
+          "method": "POST",
+          "endpoint": "/query/event/comparison",
+          "pathParameters": {},
+          "queryParameters": {},
+          "body": {
+            "comparisons": [
+              {
+                "propertyName": "systolicPressure",
+                "comparison": "GTE",
+                "value": 150
+              }
+            ]
+          },
+          "missingInformation": []
+        },
+        "validation": {
+          "valid": true,
+          "method": "POST",
+          "endpoint": "/query/event/comparison",
+          "issues": []
+        },
+        "prepared_request": {
+          "method": "POST",
+          "url": "http://127.0.0.1:8081/query/event/comparison",
+          "query_parameters": {},
+          "body": {
+            "comparisons": [
+              {
+                "propertyName": "systolicPressure",
+                "comparison": "GTE",
+                "value": 150
+              }
+            ]
+          }
+        },
+        "persistence_response": {
+          "status_code": 200,
+          "content_type": "application/json",
+          "body": {
+            "mock": true,
+            "operation": "comparison",
+            "receivedBody": {
+              "comparisons": [
+                {
+                  "propertyName": "systolicPressure",
+                  "comparison": "GTE",
+                  "value": 150
+                }
+              ]
+            }
+          }
+        },
+        "metrics": {
+          "total_duration_ns": 19209334700,
+          "prompt_eval_count": 1611,
+          "eval_count": 85
+        },
+        "message": "Chiamata REST generata, validata ed eseguita verso il Persistence Service."
+      },
+      "actual_method": "POST",
+      "actual_endpoint": "/query/event/comparison",
+      "operation_correct": true,
+      "expected_candidate_rank": 1,
+      "validation_valid": true,
+      "generated_call": {
+        "method": "POST",
+        "endpoint": "/query/event/comparison",
+        "pathParameters": {},
+        "queryParameters": {},
+        "body": {
+          "comparisons": [
+            {
+              "propertyName": "systolicPressure",
+              "comparison": "GTE",
+              "value": 150
+            }
+          ]
+        },
+        "missingInformation": []
+      },
+      "prepared_request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8081/query/event/comparison",
+        "query_parameters": {},
+        "body": {
+          "comparisons": [
+            {
+              "propertyName": "systolicPressure",
+              "comparison": "GTE",
+              "value": 150
+            }
+          ]
+        }
+      },
+      "persistence_response": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "body": {
+          "mock": true,
+          "operation": "comparison",
+          "receivedBody": {
+            "comparisons": [
+              {
+                "propertyName": "systolicPressure",
+                "comparison": "GTE",
+                "value": 150
+              }
+            ]
+          }
+        }
+      },
+      "model": "qwen3:8b",
+      "total_duration_ns": 19209334700,
+      "prompt_eval_count": 1611,
+      "eval_count": 85,
+      "success": true
+    },
+    {
+      "case_id": "Q5",
+      "case_name": "Statistiche senza filtri su HDT o modello",
+      "run": 1,
+      "query": "Calcola count, media, minimo e massimo della proprietà \"heartRate\" per tutti i Digital Twin dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+      "expected_method": "POST",
+      "expected_endpoint": "/query/event/stats",
+      "agent_status_code": 200,
+      "wall_time_seconds": 25.686,
+      "response": {
+        "status": "executed",
+        "received_query": "Calcola count, media, minimo e massimo della proprietà \"heartRate\" per tutti i Digital Twin dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+        "model": "qwen3:8b",
+        "candidate_count": 3,
+        "candidates": [
+          {
+            "method": "POST",
+            "path": "/query/event/stats",
+            "operation_id": "query/event/stats",
+            "summary": "Query Aggregate Stats",
+            "score": 33,
+            "matched_terms": [
+              "aggregate",
+              "stats"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": true
+          },
+          {
+            "method": "POST",
+            "path": "/query/cohort",
+            "operation_id": "query/cohort",
+            "summary": "Query cohort frame (per-DT values + stats + population summary) by comparisons",
+            "score": 27,
+            "matched_terms": [
+              "stats"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": false
+          },
+          {
+            "method": "GET",
+            "path": "/hdts/{id}/properties",
+            "operation_id": "properties/get",
+            "summary": "List Property specs",
+            "score": 19,
+            "matched_terms": [
+              "hdt",
+              "hdts",
+              "list",
+              "properties",
+              "property"
+            ],
+            "required_path_parameters": [
+              "id"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": false
+          }
+        ],
+        "generated_call": {
+          "method": "POST",
+          "endpoint": "/query/event/stats",
+          "pathParameters": {},
+          "queryParameters": {},
+          "body": {
+            "hdtIds": [],
+            "modelIds": [],
+            "modelNames": [],
+            "propertyName": "heartRate",
+            "from": "2026-07-01T00:00:00Z",
+            "to": "2026-07-08T00:00:00Z"
+          },
+          "missingInformation": []
+        },
+        "validation": {
+          "valid": true,
+          "method": "POST",
+          "endpoint": "/query/event/stats",
+          "issues": []
+        },
+        "prepared_request": {
+          "method": "POST",
+          "url": "http://127.0.0.1:8081/query/event/stats",
+          "query_parameters": {},
+          "body": {
+            "hdtIds": [],
+            "modelIds": [],
+            "modelNames": [],
+            "propertyName": "heartRate",
+            "from": "2026-07-01T00:00:00Z",
+            "to": "2026-07-08T00:00:00Z"
+          }
+        },
+        "persistence_response": {
+          "status_code": 200,
+          "content_type": "application/json",
+          "body": {
+            "mock": true,
+            "operation": "stats",
+            "receivedBody": {
+              "hdtIds": [],
+              "modelIds": [],
+              "modelNames": [],
+              "propertyName": "heartRate",
+              "from": "2026-07-01T00:00:00Z",
+              "to": "2026-07-08T00:00:00Z"
+            }
+          }
+        },
+        "metrics": {
+          "total_duration_ns": 25499496000,
+          "prompt_eval_count": 1791,
+          "eval_count": 123
+        },
+        "message": "Chiamata REST generata, validata ed eseguita verso il Persistence Service."
+      },
+      "actual_method": "POST",
+      "actual_endpoint": "/query/event/stats",
+      "operation_correct": true,
+      "expected_candidate_rank": 1,
+      "validation_valid": true,
+      "generated_call": {
+        "method": "POST",
+        "endpoint": "/query/event/stats",
+        "pathParameters": {},
+        "queryParameters": {},
+        "body": {
+          "hdtIds": [],
+          "modelIds": [],
+          "modelNames": [],
+          "propertyName": "heartRate",
+          "from": "2026-07-01T00:00:00Z",
+          "to": "2026-07-08T00:00:00Z"
+        },
+        "missingInformation": []
+      },
+      "prepared_request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8081/query/event/stats",
+        "query_parameters": {},
+        "body": {
+          "hdtIds": [],
+          "modelIds": [],
+          "modelNames": [],
+          "propertyName": "heartRate",
+          "from": "2026-07-01T00:00:00Z",
+          "to": "2026-07-08T00:00:00Z"
+        }
+      },
+      "persistence_response": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "body": {
+          "mock": true,
+          "operation": "stats",
+          "receivedBody": {
+            "hdtIds": [],
+            "modelIds": [],
+            "modelNames": [],
+            "propertyName": "heartRate",
+            "from": "2026-07-01T00:00:00Z",
+            "to": "2026-07-08T00:00:00Z"
+          }
+        }
+      },
+      "model": "qwen3:8b",
+      "total_duration_ns": 25499496000,
+      "prompt_eval_count": 1791,
+      "eval_count": 123,
+      "success": true
+    }
+  ]
+}

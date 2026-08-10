@@ -14,7 +14,17 @@ class OllamaUnavailableError(RuntimeError):
 
 
 class OllamaResponseError(RuntimeError):
-    """Risposta di Ollama assente o non conforme allo schema."""
+    """Ollama ha risposto, ma la risposta non è utilizzabile."""
+
+    def __init__(
+        self,
+        message: str,
+        status_code: int | None = None,
+        detail: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.detail = detail
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +65,9 @@ class OllamaClient:
             "stream": False,
             "think": False,
             "format": prompt.output_schema,
+            "options": {
+                "temperature": 0,
+            },
         }
 
         try:
@@ -66,12 +79,23 @@ class OllamaClient:
                     f"{self.base_url}/api/chat",
                     json=request_body,
                 )
-                response.raise_for_status()
-        except httpx.HTTPError as exc:
+        except httpx.RequestError as exc:
             raise OllamaUnavailableError(
                 f"Impossibile comunicare con Ollama su "
                 f"{self.base_url}."
             ) from exc
+
+        if response.is_error:
+            error_detail = _extract_ollama_error(response)
+
+            raise OllamaResponseError(
+                (
+                    f"Ollama ha restituito HTTP "
+                    f"{response.status_code}: {error_detail}"
+                ),
+                status_code=response.status_code,
+                detail=error_detail,
+            )
 
         try:
             response_document = response.json()
@@ -138,3 +162,31 @@ def get_ollama_client(
 
 def _optional_int(value: object) -> int | None:
     return value if isinstance(value, int) else None
+
+
+def _extract_ollama_error(
+    response: httpx.Response,
+) -> str:
+    """Estrae un messaggio leggibile da un errore HTTP di Ollama."""
+
+    try:
+        payload = response.json()
+    except ValueError:
+        text = response.text.strip()
+
+        return (
+            text
+            if text
+            else "Risposta di errore senza contenuto."
+        )
+
+    if isinstance(payload, dict):
+        error = payload.get("error")
+
+        if isinstance(error, str) and error.strip():
+            return error.strip()
+
+    return (
+        response.text.strip()
+        or "Risposta di errore senza dettagli."
+    )

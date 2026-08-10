@@ -1,0 +1,395 @@
+{
+  "benchmark": "WLDT Agent Service - pipeline finale",
+  "created_at": "2026-08-10T19:20:50.449355+02:00",
+  "runs_per_case": 1,
+  "case_count": 5,
+  "summary": {
+    "total_runs": 5,
+    "successful_runs": 2,
+    "success_rate": 0.4,
+    "correct_operations": 2,
+    "operation_accuracy": 0.4,
+    "http_200_runs": 2,
+    "average_wall_time_seconds": 11.262
+  },
+  "results": [
+    {
+      "case_id": "Q1",
+      "case_name": "Elenco Digital Twin",
+      "run": 1,
+      "query": "Mostrami tutti i Digital Twin disponibili.",
+      "expected_method": "GET",
+      "expected_endpoint": "/hdts",
+      "agent_status_code": 502,
+      "wall_time_seconds": 8.914,
+      "response": {
+        "detail": "Ollama ha restituito HTTP 400: {\"error\":{\"code\":400,\"message\":\"Field 'json_schema': \\\"json_schema\\\": JSON schema conversion failed:\\nError resolving ref #/components/schemas/model: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/PhysicalInterface: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/DigitalInterface: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/Storage: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/model: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/PhysicalInterface: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/DigitalInterface: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\\nError resolving ref #/components/schemas/Storage: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\",\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtId\\\"],\\\"properties\\\":{\\\"hdtId\\\":{\\\"type\\\":\\\"string\\\"},\\\"models\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/model\\\"}},\\\"physicalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PhysicalInterface\\\"}},\\\"digitalInterfaces\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/DigitalInterface\\\"}},\\\"storages\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/Storage\\\"}},\\\"tags\\\":{\\\"type\\\":\\\"object\\\"}}}}}]}]}\",\"type\":\"invalid_request_error\"}}"
+      },
+      "success": false,
+      "operation_correct": false
+    },
+    {
+      "case_id": "Q2",
+      "case_name": "Snapshot corrente",
+      "run": 1,
+      "query": "Mostrami il valore corrente delle proprietà del Digital Twin con id \"HDT-001\".",
+      "expected_method": "GET",
+      "expected_endpoint": "/hdts/{id}/snapshot",
+      "agent_status_code": 200,
+      "wall_time_seconds": 20.328,
+      "response": {
+        "status": "executed",
+        "received_query": "Mostrami il valore corrente delle proprietà del Digital Twin con id \"HDT-001\".",
+        "model": "qwen3:8b",
+        "candidate_count": 3,
+        "candidates": [
+          {
+            "method": "GET",
+            "path": "/hdts/{id}/snapshot",
+            "operation_id": "hdts/{id}/snapshot",
+            "summary": "Get HDT snapshot",
+            "score": 28,
+            "matched_terms": [
+              "current",
+              "hdt",
+              "hdts",
+              "id",
+              "property",
+              "snapshot",
+              "value"
+            ],
+            "required_path_parameters": [
+              "id"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": false
+          },
+          {
+            "method": "GET",
+            "path": "/hdts/{id}/snapshot/by-task",
+            "operation_id": "hdts/snapshot/by-task",
+            "summary": "By-task property snapshot",
+            "score": 27,
+            "matched_terms": [
+              "hdt",
+              "hdts",
+              "id",
+              "property",
+              "snapshot",
+              "value"
+            ],
+            "required_path_parameters": [
+              "id"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": false
+          },
+          {
+            "method": "PUT",
+            "path": "/hdts/{id}/properties/{propertyId}/tags",
+            "operation_id": "properties/{propertyId}/tags/put",
+            "summary": "Replace Property tags",
+            "score": 24,
+            "matched_terms": [
+              "hdts",
+              "id",
+              "properties",
+              "property"
+            ],
+            "required_path_parameters": [
+              "id",
+              "propertyId"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": true
+          }
+        ],
+        "generated_call": {
+          "method": "GET",
+          "endpoint": "/hdts/{id}/snapshot",
+          "pathParameters": {
+            "id": "HDT-001"
+          },
+          "queryParameters": {},
+          "body": null,
+          "missingInformation": []
+        },
+        "validation": {
+          "valid": true,
+          "method": "GET",
+          "endpoint": "/hdts/{id}/snapshot",
+          "issues": []
+        },
+        "prepared_request": {
+          "method": "GET",
+          "url": "http://127.0.0.1:8081/hdts/HDT-001/snapshot",
+          "query_parameters": {},
+          "body": null
+        },
+        "persistence_response": {
+          "status_code": 200,
+          "content_type": "application/json",
+          "body": {
+            "id": "HDT-001",
+            "properties": {
+              "heartRate": 72,
+              "systolicPressure": 120
+            }
+          }
+        },
+        "metrics": {
+          "total_duration_ns": 20134782500,
+          "prompt_eval_count": 1696,
+          "eval_count": 60
+        },
+        "message": "Chiamata REST generata, validata ed eseguita verso il Persistence Service."
+      },
+      "actual_method": "GET",
+      "actual_endpoint": "/hdts/{id}/snapshot",
+      "operation_correct": true,
+      "expected_candidate_rank": 1,
+      "validation_valid": true,
+      "generated_call": {
+        "method": "GET",
+        "endpoint": "/hdts/{id}/snapshot",
+        "pathParameters": {
+          "id": "HDT-001"
+        },
+        "queryParameters": {},
+        "body": null,
+        "missingInformation": []
+      },
+      "prepared_request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8081/hdts/HDT-001/snapshot",
+        "query_parameters": {},
+        "body": null
+      },
+      "persistence_response": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "body": {
+          "id": "HDT-001",
+          "properties": {
+            "heartRate": 72,
+            "systolicPressure": 120
+          }
+        }
+      },
+      "model": "qwen3:8b",
+      "total_duration_ns": 20134782500,
+      "prompt_eval_count": 1696,
+      "eval_count": 60,
+      "success": true
+    },
+    {
+      "case_id": "Q3",
+      "case_name": "Storico in un intervallo",
+      "run": 1,
+      "query": "Mostrami i valori della proprietà \"heartRate\" del Digital Twin \"HDT-001\" dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+      "expected_method": "POST",
+      "expected_endpoint": "/query/event/values/valuesByName",
+      "agent_status_code": 200,
+      "wall_time_seconds": 26.32,
+      "response": {
+        "status": "executed",
+        "received_query": "Mostrami i valori della proprietà \"heartRate\" del Digital Twin \"HDT-001\" dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+        "model": "qwen3:8b",
+        "candidate_count": 3,
+        "candidates": [
+          {
+            "method": "POST",
+            "path": "/query/event/values/valuesByName",
+            "operation_id": "query/event/values/byName",
+            "summary": "Query Observations by Name",
+            "score": 24,
+            "matched_terms": [
+              "values",
+              "valuesbyname"
+            ],
+            "required_path_parameters": [],
+            "required_query_parameters": [],
+            "request_body_required": true
+          },
+          {
+            "method": "PUT",
+            "path": "/hdts/{id}/properties/{propertyId}/tags",
+            "operation_id": "properties/{propertyId}/tags/put",
+            "summary": "Replace Property tags",
+            "score": 19,
+            "matched_terms": [
+              "all",
+              "hdts",
+              "properties",
+              "property"
+            ],
+            "required_path_parameters": [
+              "id",
+              "propertyId"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": true
+          },
+          {
+            "method": "GET",
+            "path": "/hdts/{id}/properties",
+            "operation_id": "properties/get",
+            "summary": "List Property specs",
+            "score": 16,
+            "matched_terms": [
+              "hdt",
+              "hdts",
+              "properties",
+              "property"
+            ],
+            "required_path_parameters": [
+              "id"
+            ],
+            "required_query_parameters": [],
+            "request_body_required": false
+          }
+        ],
+        "generated_call": {
+          "method": "POST",
+          "endpoint": "/query/event/values/valuesByName",
+          "pathParameters": {},
+          "queryParameters": {},
+          "body": [
+            {
+              "hdtId": "HDT-001",
+              "propertyName": "heartRate",
+              "from": "2026-07-01T00:00:00Z",
+              "to": "2026-07-08T00:00:00Z"
+            }
+          ],
+          "missingInformation": []
+        },
+        "validation": {
+          "valid": true,
+          "method": "POST",
+          "endpoint": "/query/event/values/valuesByName",
+          "issues": []
+        },
+        "prepared_request": {
+          "method": "POST",
+          "url": "http://127.0.0.1:8081/query/event/values/valuesByName",
+          "query_parameters": {},
+          "body": [
+            {
+              "hdtId": "HDT-001",
+              "propertyName": "heartRate",
+              "from": "2026-07-01T00:00:00Z",
+              "to": "2026-07-08T00:00:00Z"
+            }
+          ]
+        },
+        "persistence_response": {
+          "status_code": 200,
+          "content_type": "application/json",
+          "body": {
+            "mock": true,
+            "operation": "valuesByName",
+            "receivedBody": [
+              {
+                "hdtId": "HDT-001",
+                "propertyName": "heartRate",
+                "from": "2026-07-01T00:00:00Z",
+                "to": "2026-07-08T00:00:00Z"
+              }
+            ]
+          }
+        },
+        "metrics": {
+          "total_duration_ns": 26127233400,
+          "prompt_eval_count": 1890,
+          "eval_count": 124
+        },
+        "message": "Chiamata REST generata, validata ed eseguita verso il Persistence Service."
+      },
+      "actual_method": "POST",
+      "actual_endpoint": "/query/event/values/valuesByName",
+      "operation_correct": true,
+      "expected_candidate_rank": 1,
+      "validation_valid": true,
+      "generated_call": {
+        "method": "POST",
+        "endpoint": "/query/event/values/valuesByName",
+        "pathParameters": {},
+        "queryParameters": {},
+        "body": [
+          {
+            "hdtId": "HDT-001",
+            "propertyName": "heartRate",
+            "from": "2026-07-01T00:00:00Z",
+            "to": "2026-07-08T00:00:00Z"
+          }
+        ],
+        "missingInformation": []
+      },
+      "prepared_request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8081/query/event/values/valuesByName",
+        "query_parameters": {},
+        "body": [
+          {
+            "hdtId": "HDT-001",
+            "propertyName": "heartRate",
+            "from": "2026-07-01T00:00:00Z",
+            "to": "2026-07-08T00:00:00Z"
+          }
+        ]
+      },
+      "persistence_response": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "body": {
+          "mock": true,
+          "operation": "valuesByName",
+          "receivedBody": [
+            {
+              "hdtId": "HDT-001",
+              "propertyName": "heartRate",
+              "from": "2026-07-01T00:00:00Z",
+              "to": "2026-07-08T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "model": "qwen3:8b",
+      "total_duration_ns": 26127233400,
+      "prompt_eval_count": 1890,
+      "eval_count": 124,
+      "success": true
+    },
+    {
+      "case_id": "Q4",
+      "case_name": "Confronto",
+      "run": 1,
+      "query": "Trova i Digital Twin che hanno almeno un'osservazione della proprietà \"systolicPressure\" maggiore di 150.",
+      "expected_method": "POST",
+      "expected_endpoint": "/query/event/comparison",
+      "agent_status_code": 502,
+      "wall_time_seconds": 0.375,
+      "response": {
+        "detail": "Ollama ha restituito HTTP 400: {\"error\":{\"code\":400,\"message\":\"Field 'json_schema': \\\"json_schema\\\": JSON schema conversion failed:\\nError resolving ref #/components/schemas/PropertyComparisonDto: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/event/comparison\\\",\\\"/query/cohort\\\",\\\"/hdts/{id}/properties/{propertyId}/tags\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/event/comparison\\\"]},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"],\\\"required\\\":[\\\"comparisons\\\"],\\\"properties\\\":{\\\"comparisons\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PropertyComparisonDto\\\"}},\\\"modelNames\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"from\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"to\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"metadataFilters\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/cohort\\\"]},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"],\\\"required\\\":[\\\"comparisons\\\"],\\\"properties\\\":{\\\"comparisons\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PropertyComparisonDto\\\"}},\\\"modelNames\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"from\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"to\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"metadataFilters\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts/{id}/properties/{propertyId}/tags\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\"}}}]}]}\\nError resolving ref #/components/schemas/PropertyComparisonDto: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\",\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/event/comparison\\\",\\\"/query/cohort\\\",\\\"/hdts/{id}/properties/{propertyId}/tags\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/event/comparison\\\"]},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"],\\\"required\\\":[\\\"comparisons\\\"],\\\"properties\\\":{\\\"comparisons\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PropertyComparisonDto\\\"}},\\\"modelNames\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"from\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"to\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"metadataFilters\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/cohort\\\"]},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"],\\\"required\\\":[\\\"comparisons\\\"],\\\"properties\\\":{\\\"comparisons\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PropertyComparisonDto\\\"}},\\\"modelNames\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"from\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"to\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"metadataFilters\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"PUT\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts/{id}/properties/{propertyId}/tags\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\"}}}]}]}\",\"type\":\"invalid_request_error\"}}"
+      },
+      "success": false,
+      "operation_correct": false
+    },
+    {
+      "case_id": "Q5",
+      "case_name": "Statistiche senza filtri su HDT o modello",
+      "run": 1,
+      "query": "Calcola count, media, minimo e massimo della proprietà \"heartRate\" per tutti i Digital Twin dal 1 luglio 2026 incluso all'8 luglio 2026 escluso.",
+      "expected_method": "POST",
+      "expected_endpoint": "/query/event/stats",
+      "agent_status_code": 502,
+      "wall_time_seconds": 0.372,
+      "response": {
+        "detail": "Ollama ha restituito HTTP 400: {\"error\":{\"code\":400,\"message\":\"Field 'json_schema': \\\"json_schema\\\": JSON schema conversion failed:\\nError resolving ref #/components/schemas/PropertyComparisonDto: components not in {\\\"description\\\":\\\"Chiamata REST strutturata prodotta dal modello LLM.\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\",\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/event/stats\\\",\\\"/query/cohort\\\",\\\"/hdts/{id}/properties\\\"]},\\\"pathParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Pathparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"queryParameters\\\":{\\\"additionalProperties\\\":true,\\\"title\\\":\\\"Queryparameters\\\",\\\"type\\\":\\\"object\\\"},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"]},\\\"missingInformation\\\":{\\\"items\\\":{\\\"type\\\":\\\"string\\\"},\\\"title\\\":\\\"Missinginformation\\\",\\\"type\\\":\\\"array\\\"}},\\\"required\\\":[\\\"method\\\",\\\"endpoint\\\"],\\\"title\\\":\\\"GeneratedApiCall\\\",\\\"type\\\":\\\"object\\\",\\\"allOf\\\":[{\\\"oneOf\\\":[{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/event/stats\\\"]},\\\"body\\\":{\\\"type\\\":\\\"object\\\",\\\"required\\\":[\\\"hdtIds\\\",\\\"modelIds\\\",\\\"modelNames\\\",\\\"propertyName\\\"],\\\"properties\\\":{\\\"hdtIds\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"modelIds\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"modelNames\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"propertyName\\\":{\\\"type\\\":\\\"string\\\"},\\\"from\\\":{\\\"type\\\":[\\\"string\\\",\\\"null\\\"],\\\"format\\\":\\\"date-time\\\"},\\\"to\\\":{\\\"type\\\":[\\\"string\\\",\\\"null\\\"],\\\"format\\\":\\\"date-time\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"POST\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/query/cohort\\\"]},\\\"body\\\":{\\\"type\\\":[\\\"null\\\",\\\"object\\\"],\\\"required\\\":[\\\"comparisons\\\"],\\\"properties\\\":{\\\"comparisons\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"$ref\\\":\\\"#/components/schemas/PropertyComparisonDto\\\"}},\\\"modelNames\\\":{\\\"type\\\":\\\"array\\\",\\\"items\\\":{\\\"type\\\":\\\"string\\\"}},\\\"from\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"to\\\":{\\\"type\\\":\\\"string\\\",\\\"format\\\":\\\"date-time\\\"},\\\"metadataFilters\\\":{\\\"type\\\":\\\"object\\\"}}}}},{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"method\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"GET\\\"]},\\\"endpoint\\\":{\\\"type\\\":\\\"string\\\",\\\"enum\\\":[\\\"/hdts/{id}/properties\\\"]},\\\"body\\\":{\\\"type\\\":\\\"null\\\"}}}]}]}\",\"type\":\"invalid_request_error\"}}"
+      },
+      "success": false,
+      "operation_correct": false
+    }
+  ]
+}

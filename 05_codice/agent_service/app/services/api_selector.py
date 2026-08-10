@@ -47,13 +47,31 @@ STOPWORDS: Final[frozenset[str]] = frozenset(
 TOKEN_ALIASES: Final[dict[str, tuple[str, ...]]] = {
     "attuale": ("current", "snapshot"),
     "calcola": ("calculate",),
+    "count": (
+        "aggregate",
+        "populationstats",
+        "statistics",
+        "stats",
+    ),
     "corrente": ("current", "snapshot"),
     "digital": ("hdt", "hdts"),
     "disponibili": ("all", "list"),
     "gemelli": ("hdt", "hdts"),
     "gemello": ("hdt", "hdts"),
     "maggiore": ("comparison", "greater", "gt"),
+    "massimo": (
+        "maximum",
+        "max",
+        "populationstats",
+        "stats",
+    ),
     "media": ("average", "mean", "populationstats", "stats"),
+    "minimo": (
+        "minimum",
+        "min",
+        "populationstats",
+        "stats",
+    ),
     "minore": ("comparison", "less", "lt"),
     "proprieta": ("properties", "property"),
     "selezionati": ("filter", "filtered"),
@@ -251,8 +269,21 @@ def _intent_bonus(
 ) -> int:
     bonus = 0
 
+    has_specific_intent = bool(
+        query_terms.intersection(
+            {
+                "comparison",
+                "history",
+                "range",
+                "snapshot",
+                "stats",
+            }
+        )
+    )
+
     if (
         "list" in query_terms
+        and not has_specific_intent
         and operation.method == "GET"
         and not operation.required_path_parameters
         and candidate_terms.intersection({"gethdts", "hdts"})
@@ -287,7 +318,7 @@ def _intent_bonus(
             }
         )
     ):
-        bonus += 12
+        bonus += 24
 
     if "range" in query_terms:
         if (
@@ -312,12 +343,26 @@ def _contains_time_range(
 ) -> bool:
     normalized_query = _normalize(query)
 
+    range_end_terms = {
+        "al",
+        "all",
+        "alla",
+        "alle",
+        "allo",
+        "ai",
+        "agli",
+    }
+
     has_range_expression = (
         "intervallo" in terms
         or "tra" in terms
         or (
             "dal" in terms
-            and "al" in terms
+            and bool(
+                terms.intersection(
+                    range_end_terms
+                )
+            )
         )
     )
 

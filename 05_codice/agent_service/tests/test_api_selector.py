@@ -141,3 +141,20 @@ def test_selector_respects_limit() -> None:
 
     assert len(candidates) == 2
     assert candidates[0].score >= candidates[1].score
+
+def test_selector_prefers_values_by_name_for_benchmark_range() -> None:
+    assert _first_path(
+        "Mostrami i valori della proprietà "
+        '"heartRate" del Digital Twin "HDT-001" '
+        "dal 1 luglio 2026 incluso "
+        "all'8 luglio 2026 escluso."
+    ) == "/query/event/values/valuesByName"
+
+
+def test_selector_prefers_stats_for_population_time_range() -> None:
+    assert _first_path(
+        "Calcola count, media, minimo e massimo "
+        'della proprietà "heartRate" per tutti i '
+        "Digital Twin dal 1 luglio 2026 incluso "
+        "all'8 luglio 2026 escluso."
+    ) == "/query/event/stats"
