@@ -2,144 +2,200 @@
 
 ## Obiettivo
 
-Impedire l'esecuzione di chiamate inventate, incomplete o incompatibili con la
-specifica esposta dal Persistence Service.
+Una chiamata prodotta dal modello non viene eseguita direttamente.
 
-La validazione applicativa è separata dal vincolo JSON applicato durante la
-generazione: un oggetto può rispettare lo schema generale dell'output e restare
-comunque non valido rispetto a una specifica operazione REST.
+Prima di raggiungere il Persistence Service deve superare una fase
+deterministica di validazione rispetto alla specifica OpenAPI corrente.
 
-## Livelli di controllo previsti
+La validazione deve impedire l'esecuzione di chiamate non conformi al contratto
+e mantenere separata la generazione LLM dal controllo deterministico.
 
-### 1. Parsing e struttura generale
+## Output strutturato
 
-- la risposta deve essere un singolo oggetto JSON;
-- devono essere presenti `method`, `endpoint`, `pathParameters`,
-  `queryParameters`, `body` e `missingInformation`;
-- i campi devono avere i tipi previsti.
+Ollama viene configurato per produrre una struttura compatibile con
+`GeneratedApiCall`.
 
-### 2. Coppia metodo/path
+Il formato contiene:
 
-La combinazione deve corrispondere a un'operazione presente nella OpenAPI
-corrente e, nella pipeline prevista, appartenere anche all'insieme delle
-operazioni candidate.
+```text
+method
+endpoint
+pathParameters
+queryParameters
+body
+missingInformation
+```
 
-### 3. Parametri
+Lo structured output riduce lo spazio delle risposte possibili, ma non
+sostituisce la validazione OpenAPI.
 
-Per path e query vengono verificati:
+## Operazione candidata
+
+Il validatore verifica che:
+
+```text
+method + endpoint
+```
+
+corrispondano a una delle operazioni candidate fornite al modello.
+
+Il path deve essere espresso nella forma dichiarata dalla OpenAPI.
+
+Per esempio:
+
+```text
+/hdts/{id}/snapshot
+```
+
+e non:
+
+```text
+/hdts/HDT-001/snapshot
+```
+
+Il valore concreto deve essere mantenuto in `pathParameters`.
+
+## Path parameter
+
+Il validatore controlla:
 
 - presenza dei parametri obbligatori;
-- assenza di parametri non definiti;
-- collocazione corretta;
-- tipo e formato, quando ricavabili dalla specifica.
+- assenza di parametri non previsti;
+- coerenza con i placeholder del path.
 
-Il path prodotto dal modello resta un template; la sostituzione dei valori
-avviene solo dopo la validazione.
+## Query parameter
 
-### 4. Request body
+Vengono controllati:
 
-Il body viene verificato rispetto allo schema associato all'operazione:
+- parametri obbligatori;
+- parametri forniti ma non previsti dall'operazione.
 
-- presenza o assenza prevista;
-- tipo radice, oggetto o array;
-- campi obbligatori;
-- tipi, enum e strutture annidate;
-- eventuali riferimenti a schemi riutilizzabili.
+## Request body
 
-### 5. Informazioni mancanti
+Il body viene confrontato con lo schema OpenAPI.
 
-Gli elementi in `missingInformation` devono corrispondere a dati realmente
-obbligatori e non presenti né nella frase né nel contesto del client.
+I controlli comprendono, quando applicabili:
 
-Campi obbligatori che ammettono valori vuoti validi non devono essere trattati
-come informazioni mancanti. Per esempio, gli array di filtro della richiesta
-`/query/event/stats` devono essere presenti ma possono essere vuoti.
+- presenza o assenza del body;
+- tipo JSON atteso;
+- oggetti;
+- array;
+- proprietà obbligatorie;
+- proprietà non previste;
+- tipi dei valori;
+- enum;
+- strutture annidate;
+- riferimenti agli schemi OpenAPI.
 
-### 6. Eseguibilità
+Se l'operazione non prevede un request body, un body generato viene considerato
+non valido.
 
-Una chiamata è eseguibile soltanto quando:
+Se la radice dello schema è un array, un singolo oggetto non viene accettato
+come sostituto.
 
-- tutti i controlli precedenti sono superati;
-- non rimangono informazioni obbligatorie mancanti;
-- la specifica OpenAPI è disponibile e valida;
-- l'URL di destinazione è quello configurato per il Persistence Service.
+## Vincoli specifici delle operazioni
 
-## Fonte della validazione
+Alcune operazioni richiedono controlli aggiuntivi.
 
-Catalogo delle operazioni e regole di validazione devono derivare dalla stessa
-istanza della OpenAPI recuperata da `GET /openapi.yaml`. In questo modo un
-aggiornamento della specifica non richiede la modifica manuale di due insiemi
-di regole separati.
+Per esempio:
 
-## Stato del prototipo
+```text
+valuesByName
+```
 
-Il validatore presente in `05_codice/agent` copre soltanto:
+richiede l'utilizzo di:
 
-- campi principali;
-- appartenenza della coppia metodo/path ai candidati;
-- placeholder del path;
-- alcuni campi obbligatori codificati manualmente;
-- coerenza di `missingInformation` per i casi coperti.
+```text
+propertyName
+```
 
-Non esegue ancora una validazione generale degli schemi OpenAPI. La versione
-nell'Agent Service dovrà quindi sostituire le regole hard-coded con controlli
-derivati dinamicamente dalla specifica.
+mentre:
 
-## Implementazione del validatore
+```text
+valuesById
+```
 
-La chiamata prodotta dal modello viene sottoposta a un controllo
-deterministico prima di qualsiasi esecuzione HTTP.
+richiede:
 
-Il validatore verifica inizialmente che la coppia composta da metodo ed
-endpoint corrisponda a una delle operazioni candidate precedentemente fornite
-al modello. Questo controllo impedisce che il modello introduca
-un'operazione esterna al contesto selezionato, anche quando l'output rispetta
-formalmente il modello generale previsto dall'Agent Service.
+```text
+propertyId
+```
 
-Una volta individuata l'operazione OpenAPI, vengono controllati:
+## Informazioni mancanti
 
-- presenza dei path parameter obbligatori;
-- assenza di path parameter non previsti;
-- presenza dei query parameter obbligatori;
-- assenza di query parameter non previsti;
-- presenza o assenza del request body;
-- tipo radice del body;
-- campi obbligatori;
-- tipi primitivi;
-- oggetti e array;
-- valori enumerati;
-- valori nel formato `date-time`;
-- riferimenti locali `$ref` agli schemi definiti nei componenti OpenAPI.
+Prima dell'esecuzione viene controllato `missingInformation`.
 
-Sono inoltre applicate alcune verifiche semantiche collegate
-all'operazione selezionata. Le operazioni identificate come `byName`
-richiedono l'impiego di `propertyName`, mentre quelle identificate come
-`byId` richiedono `propertyId`.
+Se contiene elementi, la pipeline restituisce HTTP 422 e non tenta alcuna
+chiamata verso il Persistence Service.
 
-Il validatore non modifica automaticamente la chiamata prodotta. Quando
-rileva una non conformità, restituisce un insieme di problemi strutturati,
-ognuno composto da codice, posizione e descrizione, e impedisce
-l'esecuzione della richiesta.
+## Chiamata non valida
 
-## Risultati degli smoke test
+Se il validatore rileva problemi, la pipeline restituisce HTTP 502.
 
-Il comportamento del validatore è stato verificato tramite chiamate reali al
-modello Qwen3 8B.
+La risposta include informazioni sull'errore e sulla chiamata generata, utili
+alla diagnostica.
 
-Una richiesta relativa all'elenco dei Digital Twin ha prodotto correttamente
-la chiamata `GET /hdts`, che ha superato la validazione senza segnalazioni.
+La chiamata non raggiunge il Persistence Service.
 
-Una richiesta relativa allo storico della proprietà `heartRate` in un
-intervallo temporale ha invece prodotto una chiamata formalmente compatibile
-con il modello generale `GeneratedApiCall`, ma non conforme allo schema
-specifico dell'operazione OpenAPI. Il modello ha restituito un oggetto JSON
-al posto dell'array richiesto e ha utilizzato `propertyId` al posto di
-`propertyName`.
+## Nessuna correzione automatica
 
-Il validatore ha individuato entrambe le anomalie e l'Agent Service ha
-restituito un errore `502`, impedendo che la richiesta raggiungesse il
-Persistence Service.
+Il validatore non modifica automaticamente la risposta del modello.
 
-Questo risultato conferma che la generazione strutturata riduce gli errori
-sintattici, ma non sostituisce la validazione semantica rispetto al contratto
-OpenAPI.
+Se il modello genera una chiamata errata, questa viene rifiutata invece di
+essere trasformata silenziosamente in una chiamata differente.
+
+La scelta permette di mantenere indipendenti generazione e verifica.
+
+## Validità OpenAPI e correttezza semantica
+
+La validazione OpenAPI non equivale alla verifica completa dell'intenzione
+dell'utente.
+
+Nel benchmark finale il modello ha prodotto:
+
+```text
+GTE
+```
+
+per una richiesta:
+
+```text
+maggiore di 150
+```
+
+Il valore è valido secondo OpenAPI, ma non è semanticamente equivalente al
+ground truth:
+
+```text
+GT
+```
+
+Per questo il benchmark misura separatamente:
+
+```text
+validation_valid
+```
+
+e:
+
+```text
+semantic_correct
+```
+
+## Sequenza
+
+```text
+LLM
+ ↓
+GeneratedApiCall
+ ↓
+missingInformation
+ ↓
+ApiCallValidator
+ ↓
+ApiRequestPreparer
+ ↓
+RestClient
+ ↓
+Persistence Service
+```

@@ -1,94 +1,264 @@
 # Benchmark della pipeline finale
 
-Data esecuzione: 10/08/2026
+Data di esecuzione: 10/08/2026
 
-File risultati: `results_20260810_201100.json`
+Risultato grezzo:
+
+```text
+02_esperimenti/pipeline_finale/results_20260810_201100.json
+```
 
 ## Obiettivo
 
-Valutare la pipeline completa dell'Agent Service dalla richiesta in linguaggio naturale alla generazione della chiamata REST, alla validazione OpenAPI e all'esecuzione verso un Persistence Service simulato.
+Valutare la pipeline completa dell'Agent Service dalla richiesta in linguaggio
+naturale alla generazione della chiamata REST, alla validazione OpenAPI e
+all'esecuzione verso un Persistence Service simulato.
 
-Il benchmark usa 5 casi funzionali, ripetuti 3 volte ciascuno, per un totale di 15 esecuzioni.
-
-## Metriche
-
-- **Operation accuracy**: metodo HTTP ed endpoint coincidono con il ground truth.
-- **Arguments accuracy**: path parameters, query parameters, body e `missingInformation` coincidono con il ground truth.
-- **Semantic accuracy**: operazione e argomenti sono entrambi corretti.
-- **Validation pass rate**: il validatore OpenAPI accetta la chiamata generata.
-- **Execution success rate**: la chiamata raggiunge il Persistence Service simulato e riceve una risposta 2xx.
-- **End-to-end success rate**: correttezza semantica, validazione ed esecuzione sono tutte soddisfatte.
+Il benchmark utilizza cinque casi funzionali ripetuti tre volte ciascuno, per un
+totale di 15 esecuzioni.
 
 ## Risultati complessivi
 
-| Metrica | Risultato |
-|---|---:|
-| Operazioni corrette | 12/15 (80.0%) |
-| Argomenti corretti | 9/15 (60.0%) |
-| Chiamate semanticamente corrette | 9/15 (60.0%) |
-| Validazioni OpenAPI superate | 12/15 (80.0%) |
-| Esecuzioni Persistence riuscite | 12/15 (80.0%) |
-| Successi end-to-end | 9/15 (60.0%) |
-| Tempo medio complessivo | 25.731 s |
+```text
+Esecuzioni:                    15
+
+Operazioni corrette:           12/15 = 80%
+Argomenti corretti:             9/15 = 60%
+Correttezza semantica:          9/15 = 60%
+Validazioni OpenAPI superate:  12/15 = 80%
+Esecuzioni Persistence:        12/15 = 80%
+Successi end-to-end:            9/15 = 60%
+
+Tempo medio complessivo:       25.731 s
+```
 
 ## Risultati per caso
 
-| Caso | Operazione | Semantica | Validazione | Esecuzione | End-to-end | Tempo medio |
-|---|---:|---:|---:|---:|---:|---:|
-| Q1 | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% | 61.979 s |
-| Q2 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 11.671 s |
-| Q3 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 18.602 s |
-| Q4 | 100.0% | 0.0% | 100.0% | 100.0% | 0.0% | 14.474 s |
-| Q5 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 21.928 s |
+```text
+Q1 — Elenco Digital Twin
+Operation accuracy:   0%
+Semantic accuracy:    0%
+Validation pass:      0%
+Execution success:    0%
+End-to-end:           0%
 
-## Analisi dei casi
+Q2 — Snapshot corrente
+Operation accuracy:   100%
+Semantic accuracy:    100%
+Validation pass:      100%
+Execution success:    100%
+End-to-end:           100%
 
-### Q1 — Elenco Digital Twin
+Q3 — Storico in un intervallo
+Operation accuracy:   100%
+Semantic accuracy:    100%
+Validation pass:      100%
+Execution success:    100%
+End-to-end:           100%
 
-Il caso fallisce in tutte e tre le ripetizioni. La richiesta richiede `GET /hdts`, ma il modello genera `POST /hdts` con un body di creazione popolato con valori inventati. Il body non rispetta inoltre lo schema OpenAPI della relativa operazione. Il validatore intercetta l'errore e impedisce alla chiamata di raggiungere il Persistence Service.
+Q4 — Confronto
+Operation accuracy:   100%
+Semantic accuracy:    0%
+Validation pass:      100%
+Execution success:    100%
+End-to-end:           0%
 
-Questo caso mostra due aspetti distinti: un errore di selezione/generazione dell'operazione e l'efficacia del livello di validazione nel bloccare una richiesta non conforme prima dell'esecuzione.
+Q5 — Statistiche
+Operation accuracy:   100%
+Semantic accuracy:    100%
+Validation pass:      100%
+Execution success:    100%
+End-to-end:           100%
+```
 
-### Q2 — Snapshot corrente
+## Q1 — Elenco Digital Twin
 
-Il caso è corretto in tutte le ripetizioni. La pipeline genera `GET /hdts/{id}/snapshot`, mantiene il placeholder OpenAPI nell'endpoint e inserisce `HDT-001` in `pathParameters`. La richiesta viene validata, preparata ed eseguita correttamente.
+Q1 fallisce in tutte e tre le ripetizioni.
 
-### Q3 — Valori di una proprietà in un intervallo
+La richiesta richiede:
 
-Il caso è corretto in tutte le ripetizioni. La pipeline seleziona `POST /query/event/values/valuesByName`, genera un body radice di tipo array e usa `propertyName = heartRate`, `hdtId = HDT-001` e i due estremi temporali attesi.
+```text
+GET /hdts
+```
 
-### Q4 — Confronto
+Il modello genera invece:
 
-Il metodo e l'endpoint sono corretti in tutte le ripetizioni, ma il modello traduce `maggiore di 150` come `GTE 150` invece di `GT 150`. La chiamata è formalmente valida secondo OpenAPI e viene quindi eseguita, ma non è semanticamente equivalente alla richiesta.
+```text
+POST /hdts
+```
 
-Il caso evidenzia che la validazione OpenAPI controlla la conformità strutturale e i valori ammessi dallo schema, ma non può da sola verificare la fedeltà semantica della traduzione rispetto alla frase originale.
+accompagnato da un request body di creazione contenente valori non presenti
+nella richiesta dell'utente.
 
-### Q5 — Statistiche senza filtri su HDT o modello
+La chiamata generata non rispetta inoltre completamente lo schema OpenAPI
+dell'operazione selezionata.
 
-Il caso è corretto in tutte le ripetizioni. La pipeline genera `POST /query/event/stats` e include gli array obbligatori `hdtIds`, `modelIds` e `modelNames` come array vuoti, oltre a `propertyName` e all'intervallo temporale atteso.
+Il validatore intercetta l'errore e impedisce alla richiesta di raggiungere il
+Persistence Service.
+
+Questo caso mostra contemporaneamente:
+
+- un errore della fase di generazione;
+- l'efficacia del livello di validazione nel bloccare una richiesta non valida.
+
+## Q2 — Snapshot corrente
+
+Q2 è corretto in tutte e tre le ripetizioni.
+
+La pipeline genera:
+
+```text
+GET /hdts/{id}/snapshot
+```
+
+e mantiene:
+
+```text
+id = HDT-001
+```
+
+separato nei `pathParameters`.
+
+La richiesta supera la validazione ed è eseguita correttamente.
+
+## Q3 — Valori di una proprietà in un intervallo
+
+Q3 è corretto in tutte e tre le ripetizioni.
+
+La pipeline utilizza:
+
+```text
+POST /query/event/values/valuesByName
+```
+
+con un body radice di tipo array.
+
+Il modello utilizza correttamente:
+
+```text
+hdtId = HDT-001
+propertyName = heartRate
+from = 2026-07-01T00:00:00Z
+to = 2026-07-08T00:00:00Z
+```
+
+La chiamata supera validazione ed esecuzione.
+
+## Q4 — Confronto
+
+Q4 seleziona correttamente metodo ed endpoint in tutte le ripetizioni:
+
+```text
+POST /query/event/comparison
+```
+
+Il modello traduce però:
+
+```text
+maggiore di 150
+```
+
+utilizzando:
+
+```text
+GTE
+```
+
+anziché il ground truth:
+
+```text
+GT
+```
+
+`GTE` è un valore valido secondo il contratto OpenAPI.
+
+Per questo motivo la chiamata supera la validazione e viene eseguita dal
+Persistence Service simulato.
+
+La chiamata è tuttavia semanticamente diversa dalla richiesta naturale.
+
+Questo caso evidenzia che:
+
+```text
+validità OpenAPI != correttezza semantica
+```
+
+La validazione strutturale può verificare che un operatore sia ammesso dalla
+specifica, ma non garantisce da sola che rappresenti esattamente l'intento
+espresso dall'utente.
+
+## Q5 — Statistiche senza filtri
+
+Q5 è corretto in tutte e tre le ripetizioni.
+
+La pipeline genera:
+
+```text
+POST /query/event/stats
+```
+
+con:
+
+```json
+{
+  "hdtIds": [],
+  "modelIds": [],
+  "modelNames": [],
+  "propertyName": "heartRate",
+  "from": "2026-07-01T00:00:00Z",
+  "to": "2026-07-08T00:00:00Z"
+}
+```
+
+La richiesta supera validazione ed esecuzione.
 
 ## Stabilità
 
-L'esito funzionale è stabile nelle tre ripetizioni: Q2, Q3 e Q5 risultano sempre corretti; Q1 fallisce sempre nella scelta dell'operazione; Q4 usa sempre `GTE` al posto di `GT`. Nel body errato di Q1 sono presenti piccole variazioni di valori generati, ma non cambia la classe dell'errore.
+L'esito funzionale dei cinque casi è stabile nelle tre ripetizioni.
 
-## Tempi
+```text
+Q1: fallisce 3/3
+Q2: corretto 3/3
+Q3: corretto 3/3
+Q4: stesso errore semantico 3/3
+Q5: corretto 3/3
+```
 
-Il tempo medio complessivo è 25.731 s. Q1 è il caso più lento (61.979 s medi), anche perché il modello produce un body molto più esteso di quello necessario. Tra i casi riusciti, i tempi medi vanno da 11.671 s per Q2 a 21.928 s per Q5.
+La configurazione a temperatura zero riduce la variabilità della generazione,
+ma non elimina gli errori sistematici presenti nel comportamento del modello.
 
 ## Interpretazione
 
-Il benchmark mostra che il sistema gestisce correttamente tre delle cinque tipologie considerate in tutte le ripetizioni e seleziona il metodo/endpoint corretto in quattro tipologie su cinque. La differenza tra 80% di accuratezza dell'operazione e 60% di accuratezza semantica è significativa: selezionare l'endpoint corretto non garantisce che tutti gli argomenti esprimano esattamente l'intento dell'utente.
+L'accuratezza dell'operazione raggiunge l'80%, mentre la correttezza semantica
+end-to-end raggiunge il 60%.
 
-La validazione OpenAPI svolge un ruolo di sicurezza importante. Nel caso Q1 blocca una chiamata non conforme prima che raggiunga il backend. Q4 mostra invece il limite complementare: una chiamata può essere perfettamente valida per lo schema ma semanticamente sbagliata rispetto alla richiesta naturale.
+La differenza mostra che individuare metodo ed endpoint corretti non è
+sufficiente a garantire la correttezza della traduzione completa.
+
+La validazione OpenAPI svolge comunque un ruolo importante nella pipeline.
+
+Nel caso Q1 impedisce l'esecuzione di una richiesta non valida.
+
+Q4 mostra invece il limite complementare: una chiamata può essere formalmente
+valida e comunque non rappresentare esattamente l'intento dell'utente.
 
 ## Limiti metodologici
 
-- Il benchmark contiene solo 5 casi funzionali; le percentuali non vanno interpretate come una stima generale dell'accuratezza dell'agente su richieste arbitrarie.
-- Le 3 ripetizioni misurano soprattutto la stabilità dei casi selezionati; non equivalgono a 15 richieste semanticamente indipendenti.
-- I casi sono stati utilizzati anche durante lo sviluppo e la diagnostica della pipeline, quindi il benchmark è più correttamente interpretabile come benchmark controllato/regressivo che come test set completamente indipendente.
-- L'esecuzione usa un Persistence Service simulato; il benchmark verifica la costruzione della richiesta e il percorso end-to-end dell'Agent Service, non il comportamento del Persistence Service reale o del database.
-- Lo scoring semantico usa un ground truth esatto. In particolare, per Q5 assume la convenzione progettuale secondo cui array di filtro vuoti rappresentano l'assenza di restrizioni su HDT o modello.
+Il benchmark presenta alcuni limiti:
 
-## Stato del benchmark
+- comprende soltanto cinque tipologie funzionali;
+- le tre ripetizioni non rappresentano quindici richieste indipendenti;
+- i casi sono stati utilizzati anche durante sviluppo e diagnostica;
+- il Persistence Service utilizzato è un mock;
+- lo scoring semantico utilizza una ground truth esatta.
 
-Questi risultati costituiscono il risultato congelato del benchmark controllato della pipeline nella configurazione valutata il 10/08/2026. Eventuali modifiche successive all'agente devono essere documentate separatamente e non devono sovrascrivere questo risultato.
+Il risultato deve quindi essere interpretato come benchmark controllato e
+regressivo della pipeline e non come stima generale dell'accuratezza su
+richieste arbitrarie.
+
+## Congelamento del risultato
+
+Il risultato del 10/08/2026 viene mantenuto senza modifiche retroattive.
+
+Eventuali modifiche future all'Agent Service dovranno essere valutate in un
+esperimento separato.

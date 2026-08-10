@@ -2,113 +2,235 @@
 
 ## Obiettivo
 
-Realizzare un servizio capace di tradurre richieste in linguaggio naturale in
-chiamate REST valide per il Persistence Service WLDT, eseguirle e inoltrare il
-risultato al client.
+L'Agent Service è un componente indipendente incaricato di tradurre richieste
+espresse in linguaggio naturale in chiamate REST compatibili con il
+Persistence Service WLDT.
 
-L'Agent Service si adatta all'infrastruttura esistente. Il Persistence Service
-resta la fonte di verità per le operazioni disponibili e non deve incorporare
-logica LLM.
+L'agente non modifica il Persistence Service e utilizza la specifica OpenAPI
+corrente come contratto per individuare, generare e validare le operazioni
+disponibili.
 
-## Flusso generale
+## Architettura generale
 
 ```text
-Client
-  │ richiesta naturale + eventuale contesto
-  ▼
-Agent Service
-  │
-  ├─ OpenApiProvider ───────► GET /openapi.yaml
-  │                           Persistence Service
-  │
-  ├─ ApiCatalog / ApiSelector
-  ├─ PromptBuilder
-  ├─ OllamaClient ──────────► Ollama
-  ├─ OutputParser
-  ├─ ApiCallValidator
-  ├─ RestExecutor ──────────► Persistence Service
-  └─ ResponseMapper
-  │
-  ▼
-Client
+Utente / Client
+      │
+      ▼
+POST /query
+      │
+      ▼
+OpenApiLoader
+      │
+      ▼
+OpenApiCatalog
+      │
+      ▼
+ApiSelector
+(top 3)
+      │
+      ▼
+PromptBuilder
+      │
+      ▼
+Ollama / Qwen3 8B
+      │
+      ▼
+GeneratedApiCall
+      │
+      ├── missingInformation
+      │        └──► HTTP 422
+      │
+      ▼
+ApiCallValidator
+      │
+      ├── chiamata non valida
+      │        └──► HTTP 502
+      │
+      ▼
+ApiRequestPreparer
+      │
+      ▼
+RestClient
+      │
+      ▼
+Persistence Service
+      │
+      ▼
+Risposta
 ```
 
-## Componenti
+## Interfaccia HTTP
 
-### OpenApiProvider
+L'Agent Service è implementato tramite FastAPI.
 
-Recupera la specifica da `GET /openapi.yaml` del Persistence Service. La
-specifica può essere conservata in cache, ma deve essere prevista una politica
-di aggiornamento e la gestione dell'indisponibilità del backend.
+Espone:
 
-La stessa versione deve alimentare sia il catalogo delle operazioni sia la
-validazione, evitando divergenze tra generazione ed esecuzione.
+```text
+GET  /health
+GET  /openapi/status
+GET  /openapi/operations
+POST /query
+```
 
-### ApiCatalog
+`POST /query` rappresenta il punto di ingresso della pipeline completa.
 
-Trasforma la sezione `paths` della specifica in una rappresentazione interna
-contenente almeno:
+## Caricamento della OpenAPI
+
+`OpenApiLoader` recupera la specifica dall'indirizzo configurato del
+Persistence Service.
+
+La pipeline operativa non utilizza una copia statica della OpenAPI come fonte
+principale.
+
+Il documento viene analizzato prima di procedere alle fasi successive.
+
+## Catalogo delle operazioni
+
+`OpenApiCatalog` trasforma il documento OpenAPI in una rappresentazione
+normalizzata delle operazioni disponibili.
+
+Per ogni operazione vengono mantenute informazioni quali:
 
 - metodo HTTP;
-- path template;
-- descrizione o summary;
-- parametri per path e query;
-- schema del request body;
-- campi obbligatori.
+- path;
+- operationId;
+- summary;
+- description;
+- tag;
+- path parameter obbligatori;
+- query parameter obbligatori;
+- presenza di request body.
 
-### ApiSelector
+Il catalogo permette al selettore di lavorare su una rappresentazione più
+compatta della specifica.
 
-Riceve la richiesta naturale e seleziona un insieme ristretto di operazioni
-candidate. Il prototipo usa regole lessicali manuali; la versione integrata
-dovrà costruire il catalogo dalla OpenAPI e separare le regole di dominio dal
-codice di orchestrazione.
+## Selezione delle candidate
 
-### PromptBuilder
+`ApiSelector` confronta deterministicamente la richiesta dell'utente con i
+metadati delle operazioni.
 
-Fornisce al modello soltanto le operazioni candidate e le informazioni
-necessarie per costruire la chiamata. Impone un output JSON strutturato e vieta
-l'invenzione di endpoint o campi.
+La pipeline seleziona un massimo di tre candidate ordinate per punteggio.
 
-### OllamaClient
+La selezione riduce il numero di operazioni che devono essere interpretate dal
+modello.
 
-Invia il prompt al modello locale tramite l'API HTTP di Ollama. Il modello
-iniziale del prototipo è Qwen3 8B; la configurazione deve rimanere esterna al
-codice.
+## Costruzione del prompt
 
-### OutputParser
+`PromptBuilder` riceve:
 
-Verifica che la risposta sia un oggetto JSON e la converte nel modello interno
-della chiamata API.
+- richiesta naturale;
+- candidate ordinate;
+- documento OpenAPI corrente.
 
-### ApiCallValidator
+Il prompt contiene soltanto le informazioni OpenAPI necessarie alle candidate e
+gli schemi referenziati rilevanti.
 
-Confronta la chiamata generata con la OpenAPI corrente. Controlla la coppia
-metodo/path, i parametri, il body e le informazioni mancanti. Una chiamata non
-valida o incompleta non viene eseguita.
+Tra le regole inserite nel prompt:
 
-### RestExecutor
+- utilizzare una delle candidate;
+- mantenere il path OpenAPI nella forma originale;
+- mantenere separati i valori dei path parameter;
+- rispettare la struttura radice del body;
+- distinguere `propertyName` e `propertyId`;
+- non inventare informazioni mancanti.
 
-Risolti i path parameter e costruita la query string, esegue la richiesta sul
-Persistence Service rispettando timeout e gestione degli errori.
+## Structured output
 
-### ResponseMapper
+Il modello produce una struttura `GeneratedApiCall`.
 
-Restituisce al client uno dei seguenti esiti:
+Lo schema di output viene ristretto dinamicamente sulla base delle candidate.
 
-- successo con chiamata generata e dati del Persistence Service;
-- informazioni mancanti;
-- errore di generazione o validazione;
-- errore del Persistence Service.
+Possono essere vincolati:
 
-## Decisioni progettuali
+- metodo HTTP;
+- endpoint;
+- tipo radice del body;
+- campi obbligatori;
+- requisiti specifici dell'operazione.
 
-Il modello non riceve l'intera OpenAPI. La specifica completa viene elaborata
-dal servizio, mentre nel prompt entrano soltanto le operazioni candidate. La
-scelta deriva dagli esperimenti diagnostici E007 ed E008, nei quali Qwen3 8B
-ha selezionato correttamente i path presentati in forma isolata o sintetica.
-Poiché si tratta di esecuzioni singole, questo risultato è considerato una
-motivazione progettuale preliminare e non una prova statistica.
+## Modello linguistico
 
-Il flusso resta deterministico: l'LLM propone una sola chiamata e non può
-eseguirla direttamente. La validazione applicativa precede sempre l'accesso al
-Persistence Service.
+La configurazione finale utilizza:
+
+```text
+Qwen3 8B
+```
+
+tramite Ollama.
+
+La generazione utilizza structured output con:
+
+```text
+stream = false
+think = false
+temperature = 0
+```
+
+## Informazioni mancanti
+
+`GeneratedApiCall` contiene:
+
+```text
+missingInformation
+```
+
+Se sono presenti informazioni necessarie non determinabili dalla richiesta, la
+pipeline interrompe l'esecuzione e restituisce HTTP 422.
+
+## Validazione
+
+`ApiCallValidator` verifica deterministicamente la chiamata generata rispetto
+alla OpenAPI corrente.
+
+Una chiamata non valida viene rifiutata prima dell'esecuzione.
+
+Il validatore non corregge automaticamente la chiamata generata.
+
+## Preparazione della richiesta
+
+Dopo la validazione, `ApiRequestPreparer` costruisce la richiesta HTTP concreta.
+
+La fase comprende:
+
+- sostituzione dei placeholder del path;
+- costruzione dell'URL;
+- gestione dei query parameter;
+- mantenimento del request body.
+
+## Esecuzione
+
+`RestClient` esegue la richiesta verso il Persistence Service.
+
+La risposta del backend viene quindi restituita dall'Agent Service insieme alle
+informazioni necessarie a descrivere l'esito della pipeline.
+
+## Motivazione della pipeline
+
+Gli esperimenti preliminari hanno mostrato difficoltà dei modelli locali quando
+ricevono direttamente un contesto OpenAPI troppo ampio.
+
+La pipeline finale separa quindi:
+
+```text
+selezione deterministica
+        ↓
+generazione LLM
+        ↓
+validazione deterministica
+        ↓
+esecuzione REST
+```
+
+Il modello non costituisce l'unico livello responsabile della correttezza
+dell'interazione.
+
+## Limite emerso dal benchmark
+
+Il benchmark finale ha mostrato che la validità OpenAPI non garantisce
+automaticamente la correttezza semantica.
+
+Nel caso Q4 il modello produce un operatore `GTE`, valido secondo OpenAPI, per
+una richiesta che richiede semanticamente `GT`.
+
+Validazione strutturale e correttezza semantica vengono quindi considerate due
+proprietà differenti.

@@ -207,3 +207,178 @@ risposta.
 Gli errori di trasporto vengono gestiti separatamente. Se il Persistence
 Service non è raggiungibile, l'Agent Service interrompe la pipeline con
 `503 Service Unavailable`.
+
+
+## Implementazione corrente separata dal prototipo — 10/08/2026
+
+### Problema
+
+Il codice in `05_codice/agent` rappresenta la fase sperimentale e non deve
+essere confuso con l'implementazione finale.
+
+### Decisione
+
+Mantenere il prototipo storico e sviluppare l'implementazione corrente in:
+
+```text
+05_codice/agent_service
+```
+
+### Motivazione
+
+La separazione preserva la cronologia sperimentale senza trasformarla
+retroattivamente nell'implementazione finale.
+
+## Caricamento dinamico della OpenAPI — 10/08/2026
+
+### Problema
+
+Una copia statica della specifica richiederebbe aggiornamenti manuali ad ogni
+variazione del Persistence Service.
+
+### Decisione
+
+Recuperare la OpenAPI dall'indirizzo configurato del Persistence Service.
+
+### Motivazione
+
+È l'Agent Service a doversi adattare al contratto corrente del backend.
+
+## Selezione deterministica top 3 — 10/08/2026
+
+### Problema
+
+Gli esperimenti preliminari hanno evidenziato difficoltà quando i modelli locali
+ricevono direttamente un contesto OpenAPI troppo ampio.
+
+### Decisione
+
+Utilizzare un selettore deterministico che restituisce al massimo tre
+operazioni candidate ordinate per punteggio.
+
+### Motivazione
+
+La selezione riduce il contesto senza affidare interamente al modello
+l'individuazione delle operazioni nella specifica completa.
+
+## Structured output dinamico — 10/08/2026
+
+### Problema
+
+Il solo prompt testuale non impediva al modello di produrre endpoint o body in
+forme incompatibili con la chiamata attesa.
+
+### Decisione
+
+Adattare dinamicamente il JSON Schema dello structured output alle candidate
+correnti.
+
+Possono essere limitati:
+
+- metodo;
+- endpoint;
+- tipo del body;
+- campi obbligatori.
+
+### Motivazione
+
+I vincoli vengono applicati prima della generazione invece di correggere la
+chiamata dopo la risposta del modello.
+
+## Gestione dei riferimenti OpenAPI — 10/08/2026
+
+### Problema
+
+La propagazione diretta di riferimenti:
+
+```text
+#/components/schemas/...
+```
+
+nel JSON Schema autonomo inviato a Ollama provocava errori perché tali
+riferimenti non erano risolvibili nel documento di structured output.
+
+### Decisione
+
+Non propagare direttamente questi `$ref` nello schema autonomo di Ollama.
+
+Gli schemi OpenAPI completi rimangono disponibili nel prompt e nella
+validazione.
+
+## Configurazione deterministica di Ollama — 10/08/2026
+
+### Decisione
+
+Utilizzare Qwen3 8B con:
+
+```text
+stream = false
+think = false
+temperature = 0
+```
+
+### Motivazione
+
+Il compito richiede una trasformazione strutturata e non generazione creativa.
+
+## Validazione indipendente — 10/08/2026
+
+### Decisione
+
+Il validatore non corregge automaticamente a posteriori la chiamata prodotta
+dal modello.
+
+### Motivazione
+
+Il controllo deve rimanere indipendente dalla generazione e deve rendere
+osservabili gli errori invece di nasconderli tramite correzioni automatiche.
+
+## Benchmark semantico — 10/08/2026
+
+### Problema
+
+Valutare soltanto metodo ed endpoint può classificare come corretta una
+chiamata formalmente indirizzata all'operazione giusta ma semanticamente
+diversa dalla richiesta.
+
+### Decisione
+
+Misurare separatamente:
+
+```text
+operation_correct
+arguments_correct
+semantic_correct
+validation_valid
+execution_success
+end_to_end_success
+```
+
+### Motivazione
+
+Nel caso Q4 il modello genera `GTE`, valido secondo OpenAPI, al posto di `GT`.
+
+## Congelamento del benchmark — 10/08/2026
+
+### Decisione
+
+Dopo tre ripetizioni dei cinque casi, congelare il risultato senza modificare
+ulteriormente l'agente specificamente sui fallimenti osservati.
+
+### Risultato
+
+```text
+15 esecuzioni
+operation accuracy: 80%
+semantic accuracy: 60%
+validation pass: 80%
+execution success: 80%
+end-to-end success: 60%
+```
+
+### Motivazione
+
+Correggere ulteriormente l'agente sui cinque casi già utilizzati avrebbe
+adattato manualmente il sistema al benchmark.
+
+Eventuali miglioramenti successivi dovranno essere valutati separatamente.

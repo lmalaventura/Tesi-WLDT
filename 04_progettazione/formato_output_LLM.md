@@ -2,10 +2,12 @@
 
 ## Obiettivo
 
-Il modello deve restituire esclusivamente un oggetto JSON. Testo esplicativo,
-Markdown o endpoint sostituiti con valori concreti non sono ammessi.
+Il modello non restituisce una descrizione testuale della chiamata da eseguire.
 
-## Schema logico
+La comunicazione tra LLM e codice applicativo utilizza un oggetto JSON
+strutturato rappresentato da `GeneratedApiCall`.
+
+## Struttura generale
 
 ```json
 {
@@ -26,20 +28,33 @@ Markdown o endpoint sostituiti con valori concreti non sono ammessi.
 }
 ```
 
-## Campi
+## `method`
 
-### `method`
+Metodo HTTP dell'operazione selezionata.
 
-Metodo HTTP associato all'operazione candidata.
+Lo schema di output viene ristretto ai metodi presenti tra le operazioni
+candidate.
 
-### `endpoint`
+## `endpoint`
 
-Path template riportato nella OpenAPI, senza sostituire i placeholder. Per
-esempio, deve rimanere `/hdts/{id}/snapshot`.
+Path OpenAPI dell'operazione.
 
-### `pathParameters`
+Deve essere mantenuto nella forma dichiarata dalla specifica.
 
-Oggetto che associa ogni placeholder al valore ricavato dalla richiesta.
+Per esempio:
+
+```text
+/hdts/{id}/snapshot
+```
+
+Il valore concreto di `{id}` non viene inserito direttamente nel path prodotto
+dal modello.
+
+## `pathParameters`
+
+Contiene i valori dei placeholder presenti nel path.
+
+Esempio:
 
 ```json
 {
@@ -47,53 +62,88 @@ Oggetto che associa ogni placeholder al valore ricavato dalla richiesta.
 }
 ```
 
-### `queryParameters`
+## `queryParameters`
 
-Parametri da inserire nella query string. Deve essere un oggetto vuoto quando
-l'operazione non ne prevede.
+Contiene i parametri destinati alla query string.
 
-### `body`
+Quando non sono necessari viene utilizzato un oggetto vuoto.
 
-Corpo JSON della richiesta. Deve essere `null` per le operazioni che non
-prevedono un body e rispettare lo schema OpenAPI negli altri casi.
+## `body`
 
-### `missingInformation`
+Contiene il request body.
 
-Elenco delle informazioni obbligatorie non ricavabili né dalla frase né dal
-contesto fornito dal client. Il modello non deve inventare valori per riempire
-i campi mancanti.
+Può essere:
 
-## Vincoli
+- `null`;
+- un oggetto;
+- un array;
+- un altro tipo JSON previsto dall'OpenAPI.
 
-- metodo ed endpoint devono corrispondere alla stessa operazione candidata;
-- il path deve essere copiato esattamente dal catalogo;
-- i path parameter concreti devono comparire solo in `pathParameters`;
-- non sono ammessi campi estranei allo schema;
-- l'output non autorizza l'esecuzione: deve essere prima validato.
+La struttura radice deve coincidere con lo schema dell'operazione.
 
-## Distinzione dalla risposta dell'Agent Service
+Per esempio `valuesByName` utilizza un array:
 
-Questo documento descrive l'output interno dell'LLM. La risposta HTTP esposta
-al frontend include anche stato, risultato del Persistence Service ed
-informazioni sull'errore, come definito in `integrazione_wldt.md`.
+```json
+[
+  {
+    "hdtId": "HDT-001",
+    "propertyName": "heartRate",
+    "from": "2026-07-01T00:00:00Z",
+    "to": "2026-07-08T00:00:00Z"
+  }
+]
+```
 
-## Limiti della generazione strutturata
+## `missingInformation`
 
-La conformità dell’output al modello `GeneratedApiCall` garantisce soltanto
-che la risposta possieda i campi generali richiesti dall’Agent Service.
+Contiene le informazioni necessarie alla costruzione della richiesta ma non
+determinabili senza inventare dati.
 
-Non garantisce invece che il contenuto del campo `body` rispetti lo schema
-specifico dell’operazione OpenAPI selezionata.
+Se la lista non è vuota, la pipeline non esegue la chiamata.
 
-Durante uno smoke test relativo a una richiesta storica con intervallo
-temporale, il modello ha selezionato correttamente l’endpoint
-`POST /query/event/values/valuesByName`, ma ha generato un oggetto JSON al
-posto dell’array richiesto dal request body.
+## JSON Schema dinamico
 
-Il modello ha inoltre utilizzato il campo `propertyId` per un valore che
-rappresentava il nome della proprietà e che avrebbe quindi dovuto essere
-inserito in `propertyName`.
+Il modello Pydantic definisce il formato generale di `GeneratedApiCall`.
 
-Questo risultato mostra che l’uso di un JSON Schema generale per l’output non
-rende superflua la validazione semantica rispetto alla specifica OpenAPI della
-singola operazione.
+Prima della generazione, `PromptBuilder` costruisce però uno schema più
+ristretto sulla base delle candidate.
+
+Possono essere limitati:
+
+- `method`;
+- `endpoint`;
+- tipo radice del body;
+- campi obbligatori;
+- alcuni requisiti specifici delle operazioni.
+
+## Riferimenti OpenAPI
+
+Il prompt contiene gli schemi OpenAPI rilevanti per interpretare le candidate.
+
+Il JSON Schema autonomo passato a Ollama non mantiene invece riferimenti
+`$ref` OpenAPI non risolvibili nel documento di structured output.
+
+Quando necessario, tali riferimenti vengono ridotti a vincoli strutturali.
+
+La verifica completa dello schema rimane responsabilità
+dell'`ApiCallValidator`.
+
+## Regole semantiche del prompt
+
+Il prompt specifica inoltre alcune convenzioni, tra cui:
+
+- usare `propertyName` quando viene indicato il nome della proprietà;
+- usare `propertyId` soltanto quando viene fornito esplicitamente un
+  identificatore;
+- mantenere gli array obbligatori di `/query/event/stats`;
+- utilizzare array vuoti per tali filtri quando la dimensione non viene
+  ristretta;
+- non inventare endpoint, parametri o valori necessari.
+
+## Separazione tra formato e validazione
+
+Un output formalmente compatibile con `GeneratedApiCall` non è automaticamente
+una chiamata valida rispetto alla OpenAPI.
+
+L'oggetto viene sempre sottoposto al validatore deterministico prima
+dell'esecuzione.

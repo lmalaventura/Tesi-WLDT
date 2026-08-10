@@ -1,59 +1,130 @@
-# Tecnologie e componenti
+# Tecnologie adottate
 
-## Componenti WLDT esistenti
+## Python
 
-- frontend: Next.js e React;
-- Persistence Service: Kotlin con Ktor;
-- persistenza: MongoDB;
-- contratto: OpenAPI v0.2.0;
-- ambiente locale completo: Docker, repository da acquisire.
+L'Agent Service è implementato in Python.
 
-Questi componenti costituiscono l'ambiente a cui l'Agent Service deve
-adattarsi.
+Il progetto utilizza Python 3.12 o successivo.
 
-## Agent Service
+La scelta permette di mantenere il componente indipendente dal frontend e dal
+Persistence Service e di utilizzare librerie adatte all'integrazione con LLM,
+HTTP e OpenAPI.
 
-### Python
+## FastAPI
 
-Python è stato scelto per realizzare un servizio separato dal frontend
-TypeScript e dal backend Kotlin. La prima pipeline è già stata prototipata in
-questo linguaggio e usa soltanto interfacce HTTP verso Ollama e il Persistence
-Service.
+FastAPI viene utilizzato per esporre l'Agent Service come microservizio HTTP.
 
-### Framework HTTP previsto
+Gli endpoint implementati sono:
 
-FastAPI è previsto per esporre `GET /health` e `POST /query`. La scelta verrà
-registrata definitivamente dopo la creazione e il test dello scheletro del
-servizio.
+```text
+GET  /health
+GET  /openapi/status
+GET  /openapi/operations
+POST /query
+```
 
-### Librerie previste
+## Pydantic
 
-- Pydantic per i modelli di richiesta, risposta e configurazione;
-- HTTPX per le comunicazioni HTTP;
-- PyYAML o parser equivalente per leggere la specifica OpenAPI;
-- pytest per i test del nuovo servizio.
+Pydantic viene utilizzato per:
 
-L'elenco definitivo dipenderà dall'implementazione; le dipendenze non ancora
-utilizzate non devono essere aggiunte preventivamente.
+- modelli request/response;
+- rappresentazione di `GeneratedApiCall`;
+- configurazione applicativa;
+- produzione del JSON Schema di base dello structured output.
 
-## Runtime LLM
+## HTTPX
 
-Ollama espone il modello locale tramite API HTTP e supporta l'output vincolato
-da JSON Schema. Il prototipo utilizza Qwen3 8B con temperatura zero e thinking
-disabilitato nella chiamata applicativa.
+HTTPX viene utilizzato per le comunicazioni HTTP con:
 
-Qwen3 4B, Qwen3 14B e Llama 3.1 8B sono stati usati nella fase sperimentale ma
-non sono componenti obbligatori dell'architettura finale.
+- Ollama;
+- risorsa OpenAPI;
+- Persistence Service.
 
-## Orchestrazione
+## PyYAML
 
-La prima versione usa una pipeline personalizzata. LangChain e smolagents sono
-stati analizzati come alternative, ma non sono dipendenze del progetto nello
-stato corrente. La motivazione è riportata in
-`02_esperimenti/framework/E010_framework_agentici/decisione.md`.
+PyYAML viene utilizzato per il parsing della specifica OpenAPI in formato YAML.
 
-## Specifica OpenAPI
+## Ollama
 
-La specifica non viene trattata come file statico del solo Agent Service. La
-versione aggiornata deve essere recuperata dal Persistence Service tramite
-`GET /openapi.yaml` e usata per catalogo, prompt e validazione.
+Ollama viene utilizzato come runtime locale del modello linguistico.
+
+La configurazione finale utilizza:
+
+```text
+qwen3:8b
+```
+
+La generazione utilizza:
+
+```text
+stream = false
+think = false
+temperature = 0
+```
+
+## Modelli analizzati
+
+Durante la fase sperimentale sono stati analizzati:
+
+- ChatGPT;
+- Qwen3 4B;
+- Qwen3 8B;
+- Llama 3.1 8B.
+
+Il confronto iniziale è stato utilizzato per analizzare il comportamento delle
+diverse configurazioni e della rappresentazione del contesto OpenAPI.
+
+Qwen3 8B è stato successivamente utilizzato nella pipeline locale finale.
+
+## OpenAPI
+
+La specifica analizzata utilizza:
+
+```text
+OpenAPI 3.1.1
+```
+
+e dichiara:
+
+```text
+info.version: v0.2.0
+```
+
+La specifica viene utilizzata per:
+
+- catalogazione;
+- selezione;
+- costruzione del prompt;
+- validazione.
+
+## pytest
+
+pytest viene utilizzato per i test automatici dell'Agent Service.
+
+## uv
+
+`uv` viene utilizzato per la gestione dell'ambiente Python, delle dipendenze e
+per l'esecuzione dei comandi.
+
+Esempio:
+
+```powershell
+uv run python -m pytest -q
+```
+
+## Pipeline dedicata
+
+La soluzione finale non utilizza un framework agentico generalista.
+
+La scelta non deriva dall'impossibilità di implementare il sistema con altri
+framework, ma dalla natura circoscritta del flusso:
+
+```text
+selezione OpenAPI
+→ generazione LLM
+→ validazione
+→ esecuzione REST
+```
+
+Una pipeline dedicata permette di mantenere esplicite le responsabilità dei
+singoli componenti.

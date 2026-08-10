@@ -375,3 +375,140 @@ disponibile l'ambiente WLDT.
 
 Valutare inoltre l'integrazione minima dell'Agent Service nel Query
 Workbench del frontend.
+
+
+## 10/08/2026
+
+### Obiettivo
+
+Completare la prima implementazione end-to-end dell'Agent Service, verificare
+la pipeline con un Persistence Service simulato e produrre un benchmark
+controllato.
+
+### Attività svolte
+
+- Completata la pipeline `POST /query`.
+- Verificato il caricamento dinamico della OpenAPI.
+- Consolidato il catalogo delle operazioni.
+- Migliorato il selettore deterministico.
+- Impostata la selezione a un massimo di tre candidate.
+- Integrato Qwen3 8B tramite Ollama.
+- Configurato lo structured output.
+- Impostata la temperatura a zero.
+- Distinte le condizioni di indisponibilità Ollama dagli errori della risposta.
+- Implementato e verificato il validatore OpenAPI.
+- Implementato `ApiRequestPreparer`.
+- Implementato `RestClient`.
+- Collegata l'esecuzione al Persistence Service.
+- Realizzato un mock del Persistence Service.
+- Realizzato il runner del benchmark finale.
+- Esteso lo scoring alla correttezza semantica.
+- Eseguito il benchmark finale su cinque casi ripetuti tre volte.
+
+### Problemi individuati durante la diagnostica
+
+#### Snapshot
+
+Il modello sostituiva inizialmente il placeholder OpenAPI:
+
+```text
+/hdts/HDT-001/snapshot
+```
+
+invece di mantenere:
+
+```text
+/hdts/{id}/snapshot
+```
+
+con il valore separato nei path parameter.
+
+#### ValuesByName
+
+Il modello produceva inizialmente un oggetto come body anziché l'array richiesto
+dalla OpenAPI.
+
+In una fase successiva utilizzava `propertyId` al posto di `propertyName`.
+
+Sono stati introdotti vincoli coerenti con l'operazione candidata.
+
+#### Statistiche
+
+Il modello ometteva inizialmente:
+
+```text
+hdtIds
+modelIds
+modelNames
+```
+
+nonostante fossero obbligatori nello schema.
+
+Lo structured output è stato esteso per mantenere i campi obbligatori e il
+prompt specifica l'utilizzo degli array vuoti in assenza del relativo filtro.
+
+#### Riferimenti OpenAPI
+
+La propagazione dei `$ref` OpenAPI nello schema inviato a Ollama produceva
+errori.
+
+I riferimenti non risolvibili sono stati rimossi dallo schema autonomo di
+structured output.
+
+### Benchmark finale
+
+Configurazione:
+
+```text
+5 casi
+3 ripetizioni
+15 esecuzioni
+Qwen3 8B
+Ollama
+Persistence Service simulato
+```
+
+Risultato:
+
+```text
+Operation accuracy: 80%
+Arguments accuracy: 60%
+Semantic accuracy: 60%
+Validation pass rate: 80%
+Execution success rate: 80%
+End-to-end success rate: 60%
+Tempo medio: 25.731 s
+```
+
+### Risultati per caso
+
+```text
+Q1: 0/3 end-to-end
+Q2: 3/3 end-to-end
+Q3: 3/3 end-to-end
+Q4: 0/3 end-to-end
+Q5: 3/3 end-to-end
+```
+
+Q1 genera `POST /hdts` invece di `GET /hdts` e produce un body non richiesto.
+Il validatore impedisce l'esecuzione.
+
+Q4 seleziona correttamente `/query/event/comparison`, ma utilizza `GTE` invece
+di `GT`.
+
+Il caso mostra la differenza tra validità OpenAPI e correttezza semantica.
+
+### Decisione
+
+Il benchmark viene congelato nello stato attuale.
+
+Non vengono introdotte altre modifiche all'agente specificamente per correggere
+Q1 e Q4 sui casi già utilizzati.
+
+### Prossimi passi
+
+- riallineare la documentazione tecnica;
+- preparare il materiale da condividere con il relatore;
+- verificare l'agente sul Persistence Service reale quando disponibile;
+- integrare successivamente il servizio nel Query Workbench;
+- valutare eventualmente un nuovo set di richieste indipendenti.
