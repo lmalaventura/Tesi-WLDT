@@ -382,3 +382,464 @@ Correggere ulteriormente l'agente sui cinque casi già utilizzati avrebbe
 adattato manualmente il sistema al benchmark.
 
 Eventuali miglioramenti successivi dovranno essere valutati separatamente.
+
+## Strategia di integrazione incrementale con WLDT reale — 11/08/2026
+
+### Contesto
+
+Il sistema finale dovrà integrare l'Agent Service Python con i servizi WLDT
+eseguiti tramite Docker.
+
+L'introduzione contemporanea della nuova pipeline applicativa e del networking
+Docker avrebbe però reso più difficile distinguere problemi appartenenti a
+livelli differenti.
+
+### Decisione
+
+Procedere in due fasi.
+
+Prima fase:
+
+```text
+Agent Service eseguito sull'host
+        ↓
+Persistence Service eseguito in Docker
+```
+
+Seconda fase:
+
+```text
+Agent Service eseguito in Docker
+        ↓
+Persistence Service eseguito in Docker
+```
+
+### Motivazione
+
+La prima configurazione permette di verificare isolatamente:
+
+- caricamento della OpenAPI reale;
+- selezione delle operazioni;
+- generazione LLM;
+- validazione;
+- preparazione della richiesta;
+- comunicazione REST con il backend reale.
+
+Soltanto dopo aver verificato questi aspetti viene introdotta la
+containerizzazione dell'Agent Service.
+
+In questo modo eventuali errori successivi potranno essere attribuiti con
+maggiore precisione alla configurazione Docker o al networking.
+
+### Esito
+
+La prima fase è stata verificata con successo.
+
+L'Agent Service sull'host è riuscito a:
+
+```text
+recuperare la OpenAPI reale
+→ costruire il catalogo
+→ selezionare le candidate
+→ generare la chiamata
+→ validarla
+→ prepararla
+→ eseguirla sul Persistence Service reale
+→ ricevere dati memorizzati in MongoDB
+```
+
+La containerizzazione dell'Agent Service viene quindi rimandata alla fase
+successiva.
+
+---
+
+## Utilizzo della OpenAPI reale come contratto runtime — 11/08/2026
+
+### Decisione
+
+Durante l'integrazione utilizzare direttamente:
+
+```text
+http://127.0.0.1:8081/openapi.yaml
+```
+
+come sorgente della specifica dell'Agent Service.
+
+### Motivazione
+
+La pipeline deve operare sul contratto effettivamente esposto dal Persistence
+Service in esecuzione.
+
+Il catalogo delle operazioni non deve dipendere da una copia manualmente
+sincronizzata della specifica durante il funzionamento normale dell'agente.
+
+### Esito
+
+La OpenAPI reale caricata durante il test risulta:
+
+```text
+OpenAPI 3.1.1
+26 path
+37 operazioni
+```
+
+L'Agent Service ha costruito correttamente il proprio catalogo a partire da tale
+specifica.
+
+---
+
+## Selezione preliminare prima del modello — conferma su backend reale — 11/08/2026
+
+### Osservazione
+
+Nel test parametrizzato:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+`ApiSelector` ha classificato al primo posto:
+
+```text
+GET /hdts/{id}/snapshot
+```
+
+seguito da operazioni semanticamente vicine.
+
+### Decisione
+
+Mantenere l'architettura:
+
+```text
+OpenAPI
+→ selezione deterministica top-k
+→ LLM
+```
+
+invece di fornire indiscriminatamente al modello tutte le operazioni.
+
+### Motivazione
+
+La selezione preliminare riduce il contesto fornito al modello e separa il
+problema del retrieval delle operazioni dal problema della costruzione della
+chiamata.
+
+Il test sul backend reale conferma che tale struttura può portare
+correttamente l'operazione desiderata nel contesto del modello.
+
+---
+
+## Separazione tra benchmark quantitativo e smoke test reale — 11/08/2026
+
+### Decisione
+
+Mantenere separati:
+
+```text
+benchmark controllato del 10/08/2026
+```
+
+e:
+
+```text
+smoke test sul WLDT reale dell'11/08/2026
+```
+
+### Motivazione
+
+Il benchmark del 10 agosto utilizza:
+
+```text
+5 casi
+3 ripetizioni
+15 run
+Persistence Service simulato
+```
+
+e misura quantitativamente il comportamento della pipeline su uno scenario
+controllato.
+
+I casi sono stati utilizzati anche durante lo sviluppo e la diagnostica.
+
+Il risultato deve quindi essere interpretato come benchmark regressivo e non
+come valutazione indipendente della capacità generale dell'agente.
+
+Lo smoke test dell'11 agosto ha invece un obiettivo differente:
+
+```text
+verificare che la pipeline funzioni contro il backend WLDT reale
+```
+
+e non produrre nuove metriche di accuratezza.
+
+### Conseguenza
+
+L'esito positivo dell'integrazione reale non modifica retroattivamente:
+
+```text
+operation accuracy
+arguments accuracy
+semantic accuracy
+validation pass rate
+execution success rate
+end-to-end success rate
+```
+
+del benchmark congelato.
+
+Eventuali benchmark futuri dovranno essere versionati separatamente.
+
+---
+
+## Creazione dei dati di integrazione tramite HDT Creation Service — 11/08/2026
+
+### Problema
+
+Il database iniziale dell'ambiente development era vuoto.
+
+Per verificare gli endpoint parametrizzati dell'agente era quindi necessario
+creare almeno un HDT.
+
+### Decisione
+
+Non inserire direttamente documenti nel Persistence Service o in MongoDB.
+
+Utilizzare invece il normale flusso:
+
+```text
+frontend
+→ HDT Creation Service
+→ Persistence Service
+→ MongoDB
+```
+
+### Motivazione
+
+In questo modo i dati di test vengono creati utilizzando le stesse trasformazioni
+e convenzioni previste dal sistema WLDT.
+
+Il test dell'agente opera quindi su dati generati attraverso un flusso
+applicativo reale e non su documenti costruiti manualmente esclusivamente per
+far passare il test.
+
+### Implementazione
+
+È stato utilizzato l'input JSON:
+
+```json
+{
+  "ID": "TEST-001",
+  "Age": 30,
+  "task": "rest",
+  "Sex": "M",
+  "heartRate": 72,
+  "systolicPressure": 120
+}
+```
+
+Il Creation Service ha trasformato i valori nei relativi oggetti di dominio e
+ha creato anche le osservazioni iniziali.
+
+---
+
+## Gestione dei line ending Gradle su Windows — 11/08/2026
+
+### Problema
+
+La prima build Docker dei servizi Kotlin falliva durante:
+
+```text
+./gradlew buildFatJar --no-daemon
+```
+
+nonostante `gradlew` fosse presente nel build context.
+
+Il controllo Git mostrava:
+
+```text
+i/lf w/crlf
+```
+
+Il repository conteneva quindi il file con terminazioni LF, mentre il working
+tree Windows lo aveva convertito in CRLF.
+
+### Decisione
+
+Configurare localmente Git nei repository interessati in modo da preservare LF
+e ripristinare `gradlew` dalla versione archiviata.
+
+### Alternative non adottate
+
+Non modificare i Dockerfile ufficiali aggiungendo operazioni quali:
+
+```text
+dos2unix gradlew
+```
+
+o trasformazioni equivalenti.
+
+### Motivazione
+
+Il problema non appartiene al Dockerfile del progetto.
+
+Il file corretto è già presente nel repository e deve semplicemente essere
+mantenuto correttamente nel checkout locale.
+
+La soluzione evita inoltre modifiche non necessarie alle repository WLDT.
+
+---
+
+## Nessun workaround dell'Agent Service per GET /hdts/{id} — 11/08/2026
+
+### Osservazione
+
+Dopo la creazione dell'HDT:
+
+```text
+TEST-001
+```
+
+la richiesta:
+
+```text
+GET /hdts
+```
+
+lo elenca correttamente.
+
+La richiesta:
+
+```text
+GET /hdts/TEST-001
+```
+
+restituisce invece:
+
+```text
+HTTP 500
+state should be: hexString has 24 characters
+```
+
+La richiesta:
+
+```text
+GET /hdts/TEST-001/snapshot
+```
+
+con lo stesso identificatore restituisce correttamente:
+
+```text
+HTTP 200
+```
+
+### Decisione
+
+Non modificare l'Agent Service per:
+
+- trasformare artificialmente `TEST-001`;
+- sostituire l'identificatore con un valore MongoDB;
+- intercettare questa specifica operazione e riscriverla;
+- nascondere l'errore del Persistence Service.
+
+### Motivazione
+
+L'Agent Service deve generare e validare le chiamate rispetto al contratto
+OpenAPI.
+
+Un comportamento anomalo di uno specifico endpoint del backend deve essere
+analizzato al livello appropriato e non compensato introducendo logica
+speciale nell'agente.
+
+### Conseguenza
+
+Il comportamento viene registrato come osservazione tecnica separata.
+
+L'eventuale analisi dell'implementazione di `GET /hdts/{id}` potrà essere
+effettuata successivamente senza alterare la pipeline NL-to-REST.
+
+---
+
+## Conservazione dei dati Docker durante lo sviluppo — 11/08/2026
+
+### Decisione
+
+Per arrestare l'ambiente development utilizzare:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+```
+
+senza:
+
+```text
+-v
+```
+
+### Motivazione
+
+Il comando `down` arresta e rimuove i container mantenendo il volume MongoDB.
+
+Il comando:
+
+```text
+down -v
+```
+
+rimuoverebbe invece anche i volumi e cancellerebbe i dati utilizzati durante i
+test.
+
+### Conseguenza
+
+`TEST-001` e gli altri eventuali dati di integrazione possono essere
+riutilizzati nelle sessioni successive senza dover ricostruire ogni volta il
+dataset locale.
+
+---
+
+## Prossimo livello di integrazione — 11/08/2026
+
+### Decisione
+
+Dopo il successo della configurazione host-to-container, il prossimo intervento
+sull'architettura sarà la containerizzazione di:
+
+```text
+05_codice/agent_service
+```
+
+e il suo inserimento nello stack development WLDT.
+
+### Configurazione prevista
+
+All'interno della rete Docker il Persistence Service dovrà essere raggiunto
+tramite il nome del servizio:
+
+```text
+http://persistence-service:8081
+```
+
+anziché tramite:
+
+```text
+http://127.0.0.1:8081
+```
+
+L'accesso a Ollama, che rimane inizialmente sull'host Windows, dovrà invece
+essere configurato utilizzando il meccanismo appropriato per la comunicazione
+container-to-host.
+
+### Criterio di verifica
+
+La containerizzazione verrà considerata corretta quando sarà possibile ripetere
+lo stesso test già riuscito:
+
+```text
+richiesta naturale
+→ Agent Service
+→ GET /hdts/{id}/snapshot
+→ Persistence Service
+→ HTTP 200
+```
+
+con Agent Service e Persistence Service integrati nello stack Docker
+development.

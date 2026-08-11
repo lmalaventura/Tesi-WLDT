@@ -512,3 +512,552 @@ Q1 e Q4 sui casi già utilizzati.
 - verificare l'agente sul Persistence Service reale quando disponibile;
 - integrare successivamente il servizio nel Query Workbench;
 - valutare eventualmente un nuovo set di richieste indipendenti.
+
+## 11/08/2026
+
+### Feedback del relatore
+
+Ricevuto un nuovo feedback dal relatore.
+
+La proposta di estensione dell'architettura è stata valutata positivamente ed è
+stata considerata positiva anche la scelta di mantenere traccia degli
+esperimenti e del processo di valutazione.
+
+Il relatore ha chiesto di:
+
+- condividere la repository GitHub del progetto;
+- mantenere codice e documentazione organizzati;
+- predisporre un documento tecnico unico;
+- organizzare tale documento nelle sezioni `Context`, `Design` e `Validation`;
+- continuare per il momento con l'attuale impostazione sperimentale, in attesa
+  di eventuali indicazioni successive su una metodologia di valutazione più
+  strutturata.
+
+Per l'integrazione con WLDT è stato inoltre suggerito l'utilizzo della
+configurazione development contenuta nella repository `whdt-monitor-infra`.
+
+Questa configurazione permette di costruire i servizi direttamente dalle
+repository locali e rende possibile aggiungere successivamente anche il nuovo
+Agent Service Python allo stack.
+
+### Preparazione dell'ambiente WLDT
+
+Sono state clonate localmente, sotto una stessa directory, le repository:
+
+```text
+whdt-monitor-frontend
+persistence-service
+hdt-creation-service
+whdt-monitor-infra
+```
+
+La struttura locale utilizzata è:
+
+```text
+C:\Users\x\Desktop\WLDT-dev\
+├── whdt-monitor-frontend\
+├── persistence-service\
+├── hdt-creation-service\
+└── whdt-monitor-infra\
+```
+
+Per poter utilizzare lo stack è stato installato Docker Desktop e aggiornato
+WSL 2.
+
+Dopo l'installazione sono stati verificati con successo:
+
+```text
+docker version
+docker compose version
+docker info
+```
+
+### Problema con gradlew durante la prima build
+
+Il primo tentativo di build dello stack development falliva sia per il
+Persistence Service sia per l'HDT Creation Service durante:
+
+```text
+RUN ./gradlew buildFatJar --no-daemon
+```
+
+con errore:
+
+```text
+/bin/sh: ./gradlew: not found
+```
+
+È stato verificato che:
+
+- `gradlew` era presente;
+- `gradlew` era tracciato da Git;
+- il Gradle Wrapper era completo;
+- `.dockerignore` non escludeva il file;
+- il file risultava eseguibile nel repository.
+
+Il controllo dei line ending ha mostrato però:
+
+```text
+i/lf w/crlf
+```
+
+quindi il file archiviato da Git era LF, mentre il working tree Windows lo
+aveva convertito in CRLF.
+
+La configurazione Git locale dei repository `persistence-service` e
+`hdt-creation-service` è stata modificata in modo da non effettuare questa
+conversione.
+
+Dopo il ripristino di `gradlew`, il working tree risultava nuovamente LF e la
+build Docker ha potuto proseguire.
+
+Non sono stati modificati i Dockerfile ufficiali per compensare artificialmente
+il problema.
+
+### Avvio dello stack development WLDT
+
+Lo stack è stato avviato utilizzando la configurazione development:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+```
+
+La configurazione costruisce dai repository locali:
+
+```text
+persistence-service
+hdt-creation-service
+whdt-monitor-frontend
+```
+
+e avvia inoltre MongoDB.
+
+Le principali porte utilizzate localmente sono:
+
+```text
+3000 → whdt-monitor-frontend
+8080 → hdt-creation-service
+8081 → persistence-service
+```
+
+L'Agent Service della tesi è stato mantenuto inizialmente fuori da Docker.
+
+Questa scelta permette di verificare prima:
+
+```text
+Agent Service su host
+→ Persistence Service in Docker
+```
+
+senza introdurre contemporaneamente eventuali problemi di networking
+container-to-container.
+
+### Collegamento dell'Agent Service alla OpenAPI reale
+
+L'Agent Service è stato configurato per utilizzare il Persistence Service reale
+in esecuzione localmente.
+
+La specifica OpenAPI è stata recuperata da:
+
+```text
+http://127.0.0.1:8081/openapi.yaml
+```
+
+La verifica:
+
+```text
+GET /health
+```
+
+ha restituito correttamente lo stato `ok`.
+
+La verifica:
+
+```text
+GET /openapi/status
+```
+
+ha mostrato:
+
+```text
+status = ok
+source = http://127.0.0.1:8081/openapi.yaml
+OpenAPI version = 3.1.1
+path count = 26
+```
+
+La verifica:
+
+```text
+GET /openapi/operations
+```
+
+ha prodotto un catalogo di:
+
+```text
+37 operazioni
+```
+
+L'Agent Service è quindi riuscito a costruire dinamicamente il proprio catalogo
+a partire dalla specifica reale del Persistence Service.
+
+### Primo smoke test sul Persistence Service reale
+
+Prima di creare dati nel database è stata utilizzata una richiesta che non
+richiedesse un HDT esistente:
+
+```text
+Mostrami i nomi distinti delle proprietà disponibili.
+```
+
+La richiesta è stata inviata a:
+
+```text
+POST /query
+```
+
+dell'Agent Service.
+
+Il selettore ha incluso tra le candidate:
+
+```text
+GET /properties/names
+```
+
+e il modello Qwen3 8B ha generato:
+
+```text
+method = GET
+endpoint = /properties/names
+pathParameters = {}
+queryParameters = {}
+body = null
+missingInformation = []
+```
+
+La chiamata ha superato la validazione:
+
+```text
+valid = true
+```
+
+ed è stata preparata come:
+
+```text
+GET http://127.0.0.1:8081/properties/names
+```
+
+Il Persistence Service reale ha restituito:
+
+```text
+HTTP 200
+```
+
+Il database non conteneva ancora Digital Twin, quindi il body restituito era un
+array vuoto.
+
+Il test ha comunque verificato per la prima volta la sequenza:
+
+```text
+richiesta in linguaggio naturale
+→ Agent Service
+→ OpenAPI reale
+→ selezione candidate
+→ Qwen3 8B
+→ GeneratedApiCall
+→ validazione
+→ richiesta REST
+→ Persistence Service reale
+```
+
+### Analisi del flusso JSON del frontend
+
+Per creare un HDT coerente con il normale funzionamento di WLDT è stato
+analizzato il flusso JSON del frontend invece di inserire direttamente dati nel
+Persistence Service.
+
+Il componente `HdtManager.tsx` accetta:
+
+```text
+un oggetto JSON
+oppure
+un array di oggetti JSON
+```
+
+Il frontend normalizza l'input in un array e invia:
+
+```text
+POST /api/creation/hdts/json/batch
+```
+
+all'HDT Creation Service.
+
+La validazione effettiva degli elementi viene delegata al backend.
+
+### Analisi del JSON richiesto dal Creation Service
+
+Nel Creation Service è stato analizzato `JsonDomainAssembler`.
+
+Per ogni elemento vengono richiesti obbligatoriamente:
+
+```text
+ID
+Age
+task
+Sex
+```
+
+con:
+
+```text
+ID   → valore primitivo/stringa
+Age  → numero
+task → valore primitivo/stringa
+Sex  → valore primitivo/stringa
+```
+
+Gli ulteriori campi primitivi presenti nell'oggetto vengono convertiti in
+proprietà del Digital Twin.
+
+Per ciascuna proprietà viene inoltre creata un'osservazione iniziale.
+
+### Creazione di TEST-001
+
+È stato quindi creato attraverso il normale flusso JSON del frontend il seguente
+HDT:
+
+```json
+{
+  "ID": "TEST-001",
+  "Age": 30,
+  "task": "rest",
+  "Sex": "M",
+  "heartRate": 72,
+  "systolicPressure": 120
+}
+```
+
+Dopo l'importazione:
+
+```text
+GET /hdts
+```
+
+ha restituito un HDT con:
+
+```text
+hdtId = TEST-001
+```
+
+confermando la memorizzazione nel Persistence Service reale.
+
+### Verifica diretta dello snapshot
+
+Prima di utilizzare nuovamente l'Agent Service è stato interrogato direttamente:
+
+```text
+GET /hdts/TEST-001/snapshot
+```
+
+La richiesta ha restituito:
+
+```text
+HTTP 200
+```
+
+e il body conteneva:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+Per tutti i valori la sorgente indicata dal Persistence Service era:
+
+```text
+source = observation
+```
+
+Le osservazioni erano state create durante il processo di ingestione JSON.
+
+### Test NL-to-REST parametrizzato sul backend reale
+
+Dopo la verifica diretta è stata inviata all'Agent Service la richiesta:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+Il selettore ha prodotto come prima candidata:
+
+```text
+GET /hdts/{id}/snapshot
+```
+
+con punteggio superiore alle altre candidate.
+
+Qwen3 8B ha generato:
+
+```text
+method = GET
+endpoint = /hdts/{id}/snapshot
+pathParameters.id = TEST-001
+queryParameters = {}
+body = null
+missingInformation = []
+```
+
+La chiamata ha superato la validazione:
+
+```text
+valid = true
+```
+
+`ApiRequestPreparer` ha quindi costruito:
+
+```text
+GET http://127.0.0.1:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service reale ha restituito:
+
+```text
+HTTP 200
+```
+
+L'Agent Service ha ricevuto e restituito correttamente:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+È stato quindi verificato il primo flusso completo parametrizzato:
+
+```text
+richiesta in linguaggio naturale
+→ Agent Service
+→ OpenAPI reale
+→ ApiSelector
+→ Qwen3 8B
+→ GeneratedApiCall
+→ ApiCallValidator
+→ ApiRequestPreparer
+→ RestClient
+→ Persistence Service reale
+→ MongoDB
+→ risposta reale
+```
+
+### Comportamento osservato su GET /hdts/{id}
+
+Durante i controlli è stato osservato un comportamento anomalo della chiamata:
+
+```text
+GET /hdts/TEST-001
+```
+
+che restituisce:
+
+```text
+HTTP 500
+state should be: hexString has 24 characters
+```
+
+La chiamata:
+
+```text
+GET /hdts/TEST-001/snapshot
+```
+
+utilizzando lo stesso identificatore funziona invece correttamente e restituisce
+HTTP 200.
+
+La situazione è stata registrata come comportamento del Persistence Service.
+
+Non è stato introdotto alcun workaround nell'Agent Service per trasformare
+l'identificatore o nascondere il problema.
+
+L'eventuale causa nel backend potrà essere analizzata separatamente.
+
+### Separazione tra benchmark e integrazione reale
+
+Il benchmark congelato del 10/08/2026 rimane invariato.
+
+Il benchmark quantitativo utilizza:
+
+```text
+5 casi
+3 ripetizioni
+15 esecuzioni complessive
+Persistence Service simulato
+```
+
+e mantiene le metriche già registrate.
+
+Le verifiche dell'11/08/2026 hanno invece lo scopo di dimostrare
+l'integrazione con l'ambiente WLDT reale.
+
+I risultati dello smoke test reale non vengono utilizzati per modificare
+retroattivamente il benchmark precedente.
+
+Le due evidenze vengono quindi mantenute separate:
+
+```text
+10/08/2026
+benchmark controllato e regressivo
+→ mock Persistence Service
+
+11/08/2026
+smoke test di integrazione
+→ Persistence Service WLDT reale
+```
+
+### Stato raggiunto
+
+A fine giornata risultano verificati:
+
+```text
+Docker Desktop e WSL 2
+stack development WLDT
+frontend reale
+HDT Creation Service reale
+Persistence Service reale
+MongoDB
+Agent Service su host
+OpenAPI reale
+catalogo di 37 operazioni
+generazione strutturata tramite Qwen3 8B
+validazione della chiamata
+esecuzione verso Persistence reale
+creazione di un HDT tramite Creation Service
+snapshot diretto
+snapshot richiesto tramite linguaggio naturale
+```
+
+### Prossimi passi
+
+I prossimi passi tecnici sono:
+
+1. containerizzare `05_codice/agent_service`;
+2. aggiungere l'Agent Service allo stack development;
+3. configurare la comunicazione container-to-container con il Persistence
+   Service;
+4. configurare l'accesso a Ollama dal container;
+5. ripetere lo smoke test con Agent Service e Persistence Service entrambi
+   integrati nello stack;
+6. integrare successivamente la modalità Natural Language nel Query Workbench.
+
+Sul piano della valutazione:
+
+1. mantenere congelato il benchmark del 10 agosto;
+2. attendere l'eventuale proposta del relatore relativa a strumenti o
+   metodologie di valutazione più strutturate;
+3. progettare successivamente una valutazione su richieste indipendenti da
+   quelle utilizzate durante lo sviluppo.

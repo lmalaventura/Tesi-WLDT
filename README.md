@@ -1,56 +1,162 @@
 # Tesi WLDT — agente LLM per richieste NL → REST
 
-Repository di lavoro per la tesi dedicata alla traduzione di richieste in
-linguaggio naturale nelle chiamate REST esposte dal Persistence Service WLDT.
+Repository di lavoro della tesi dedicata alla traduzione di richieste espresse
+in linguaggio naturale in chiamate REST verso il Persistence Service WLDT.
 
-## Stato al 3 agosto 2026
+## Stato del progetto
 
-Sono stati completati:
+È disponibile una prima implementazione completa dell'Agent Service.
 
-- analisi del contratto OpenAPI v0.2.0;
-- definizione di un benchmark con cinque richieste;
-- confronto esplorativo tra ChatGPT, Qwen3 e Llama 3.1;
-- esperimenti sulla rappresentazione del contesto API;
-- prototipo locale della pipeline;
-- progettazione dell'integrazione con il sistema WLDT.
+La pipeline corrente esegue:
 
-Il prototipo corrente dimostra la sequenza selezione API → costruzione del
-prompt → invocazione di Ollama → output JSON → validazione preliminare →
-preparazione della richiesta HTTP. Non costituisce ancora l'Agent Service
-integrato e presenta limiti documentati nel relativo README.
-
-## Struttura
-
-- `00_materiali/`: specifiche OpenAPI e repository di riferimento;
-- `01_appunti/`: diario e registro delle decisioni tecniche;
-- `02_esperimenti/`: prompt, output e valutazioni dei benchmark;
-- `03_risultati/`: sintesi, criteri di valutazione e limiti metodologici;
-- `04_progettazione/`: architettura, validazione e proposta di integrazione;
-- `05_codice/agent/`: prototipo Python e test automatici;
-- `06_tesi/materiale_capitoli/`: raccordo tra documentazione e futura stesura.
-
-## Test del prototipo
-
-Dalla cartella `05_codice/agent`:
-
-```bash
-python -m unittest discover -s tests -v
+```text
+richiesta naturale
+→ caricamento OpenAPI
+→ catalogo delle operazioni
+→ selezione delle candidate
+→ costruzione del prompt
+→ Qwen3 8B tramite Ollama
+→ output JSON strutturato
+→ validazione OpenAPI
+→ preparazione HTTP
+→ esecuzione verso Persistence Service
+→ risposta
 ```
 
-Nello stato revisionato risultano presenti 18 test sui componenti
-deterministici e la suite viene completata senza errori. Le chiamate a Ollama
-e al Persistence Service non fanno parte della suite unitaria.
+L'implementazione corrente si trova in:
 
-## Repository WLDT analizzate
+```text
+05_codice/agent_service
+```
 
-La lista delle repository attualmente disponibili è riportata in
-`00_materiali/lista_repository.md`.
+La cartella:
 
-## Endpoint disponibili
+```text
+05_codice/agent
+```
 
-- `GET /health`: verifica lo stato dell’Agent Service;
-- `GET /openapi/status`: verifica il caricamento della specifica OpenAPI;
-- `GET /openapi/operations`: restituisce il catalogo normalizzato delle
-  operazioni disponibili;
-- `POST /query`: riceve una richiesta in linguaggio naturale; la pipeline
-  agentica non è ancora collegata.
+contiene invece il prototipo storico della fase sperimentale.
+
+## Funzionalità implementate
+
+L'Agent Service:
+
+- recupera dinamicamente la specifica OpenAPI;
+- costruisce un catalogo normalizzato;
+- seleziona un massimo di tre candidate;
+- costruisce un contesto ristretto;
+- utilizza Qwen3 8B tramite Ollama;
+- utilizza structured output;
+- produce `GeneratedApiCall`;
+- gestisce informazioni mancanti;
+- valida la chiamata rispetto alla OpenAPI;
+- prepara la richiesta HTTP;
+- esegue la chiamata;
+- restituisce la risposta del Persistence Service.
+
+## Endpoint
+
+```text
+GET  /health
+GET  /openapi/status
+GET  /openapi/operations
+POST /query
+```
+
+## Struttura principale
+
+```text
+00_materiali/
+01_appunti/
+02_esperimenti/
+03_risultati/
+04_progettazione/
+05_codice/
+    agent/
+    agent_service/
+06_tesi/
+```
+
+## Tecnologie
+
+```text
+Python
+FastAPI
+Pydantic
+HTTPX
+PyYAML
+Ollama
+Qwen3 8B
+pytest
+uv
+```
+
+## Benchmark finale
+
+La pipeline completa è stata verificata tramite un Persistence Service
+simulato.
+
+Il benchmark comprende:
+
+```text
+5 casi × 3 ripetizioni = 15 esecuzioni
+```
+
+Risultato congelato del 10/08/2026:
+
+```text
+Operation accuracy:      80%
+Arguments accuracy:      60%
+Semantic accuracy:       60%
+Validation pass rate:    80%
+Execution success rate:  80%
+End-to-end success rate: 60%
+Tempo medio:              25.731 s
+```
+
+Q2, Q3 e Q5 sono corretti in tutte le ripetizioni.
+
+Q1 fallisce nella generazione dell'operazione e viene bloccato dal validatore.
+
+Q4 seleziona l'endpoint corretto ma utilizza `GTE` invece di `GT`.
+
+L'analisi completa è disponibile in:
+
+```text
+03_risultati/benchmark_pipeline_finale.md
+```
+
+Il risultato grezzo è:
+
+```text
+02_esperimenti/pipeline_finale/results_20260810_201100.json
+```
+
+## Test
+
+Dalla directory:
+
+```text
+05_codice/agent_service
+```
+
+eseguire:
+
+```powershell
+uv run python -m pytest -q
+```
+
+## Stato dell'integrazione WLDT
+
+La pipeline è stata verificata end-to-end contro un Persistence Service
+simulato.
+
+Rimangono da completare:
+
+- verifica contro il Persistence Service reale;
+- integrazione nel Query Workbench;
+- test end-to-end frontend → agent → persistence.
+
+I risultati del benchmark corrente non vengono interpretati come stima
+generale dell'accuratezza su richieste arbitrarie, perché i casi sono stati
+utilizzati anche durante sviluppo e diagnostica.
