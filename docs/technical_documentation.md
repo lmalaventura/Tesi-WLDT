@@ -816,19 +816,355 @@ Service.
 Non viene introdotto nell'Agent Service alcun workaround per modificare
 automaticamente l'identificatore o compensare il comportamento del backend.
 
+### Containerization of the Agent Service
+
+Il 12 agosto 2026 è stata completata la containerizzazione dell'Agent Service.
+
+Nella directory:
+
+```text
+05_codice/agent_service
+```
+
+sono stati introdotti:
+
+```text
+Dockerfile
+.dockerignore
+```
+
+Il container utilizza Python 3.12 e installa le dipendenze definite in
+`pyproject.toml` e `uv.lock`.
+
+L'applicazione viene avviata tramite:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+La porta `8000` viene esposta dal container.
+
+La directory `.venv` locale, le cache Python, `.env` e gli altri artefatti
+dell'ambiente di sviluppo non vengono inclusi nel build context.
+
+### Standalone container verification
+
+Prima di inserire l'Agent Service nello stack Compose è stata verificata
+separatamente l'immagine Docker.
+
+Il container è stato configurato con:
+
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+PERSISTENCE_SERVICE_BASE_URL=http://host.docker.internal:8081
+OPENAPI_SPEC_URL=http://host.docker.internal:8081/openapi.yaml
+```
+
+In questa fase sia Ollama sia l'accesso al Persistence Service venivano quindi
+raggiunti dal container passando attraverso l'host.
+
+Sono stati verificati:
+
+```text
+GET /health
+GET /openapi/status
+```
+
+La risposta di `/openapi/status` ha confermato:
+
+```text
+status = ok
+source = http://host.docker.internal:8081/openapi.yaml
+OpenAPI version = 3.1.1
+path count = 26
+```
+
+È stato quindi ripetuto il test:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+L'Agent Service containerizzato ha prodotto:
+
+```text
+GET /hdts/{id}/snapshot
+id = TEST-001
+```
+
+La chiamata ha superato la validazione e `ApiRequestPreparer` ha costruito:
+
+```text
+GET http://host.docker.internal:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha restituito HTTP 200 con i valori memorizzati.
+
+Questo test ha verificato separatamente che il container fosse in grado di:
+
+```text
+raggiungere Ollama sull'host
+→ eseguire Qwen3 8B
+→ raggiungere il Persistence Service
+→ completare la pipeline NL-to-REST
+```
+
+### Integration in the WLDT development Compose stack
+
+Dopo il test standalone, l'Agent Service è stato inserito nello stack
+development WLDT.
+
+Lo stack risultante contiene:
+
+```text
+mongodb
+persistence-service
+hdt-creation-service
+whdt-monitor-frontend
+agent-service
+```
+
+Il build context dell'Agent Service punta alla directory:
+
+```text
+Tesi-WLDT/05_codice/agent_service
+```
+
+L'Agent Service espone:
+
+```text
+8000:8000
+```
+
+e utilizza la seguente configurazione di rete:
+
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+
+PERSISTENCE_SERVICE_BASE_URL=http://persistence-service:8081
+OPENAPI_SPEC_URL=http://persistence-service:8081/openapi.yaml
+```
+
+La configurazione distingue quindi due tipi di comunicazione.
+
+Per Ollama:
+
+```text
+Agent Service container
+        ↓
+host.docker.internal:11434
+        ↓
+Ollama sull'host Windows
+```
+
+Per Persistence:
+
+```text
+Agent Service container
+        ↓
+persistence-service:8081
+        ↓
+Persistence Service container
+        ↓
+MongoDB
+```
+
+Il Persistence Service non viene quindi raggiunto tramite la porta pubblicata
+sull'host, ma tramite il nome DNS del servizio all'interno della rete Compose.
+
+### Docker-to-Docker OpenAPI verification
+
+Dopo l'avvio del servizio nel progetto Compose è stato nuovamente verificato:
+
+```text
+GET /health
+```
+
+con risultato:
+
+```text
+status = ok
+```
+
+La richiesta:
+
+```text
+GET /openapi/status
+```
+
+ha restituito:
+
+```text
+status = ok
+source = http://persistence-service:8081/openapi.yaml
+OpenAPI version = 3.1.1
+path count = 26
+```
+
+Il valore di `source` costituisce una verifica osservabile del passaggio dalla
+configurazione host-to-container alla comunicazione interna Docker-to-Docker.
+
+### Docker-to-Docker parameterized verification
+
+È stato quindi ripetuto lo stesso test parametrizzato già utilizzato durante
+l'integrazione dell'11 agosto:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+`ApiSelector` ha classificato al primo posto:
+
+```text
+GET /hdts/{id}/snapshot
+```
+
+Qwen3 8B ha prodotto:
+
+```json
+{
+  "method": "GET",
+  "endpoint": "/hdts/{id}/snapshot",
+  "pathParameters": {
+    "id": "TEST-001"
+  },
+  "queryParameters": {},
+  "body": null,
+  "missingInformation": []
+}
+```
+
+La validazione ha restituito:
+
+```text
+valid = true
+```
+
+La differenza rispetto al test dell'11 agosto è visibile nella richiesta
+preparata:
+
+```text
+GET http://persistence-service:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha restituito:
+
+```text
+HTTP 200
+```
+
+con:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+La pipeline verificata è quindi:
+
+```text
+richiesta in linguaggio naturale
+        ↓
+Agent Service container
+        ↓
+OpenAPI reale tramite rete Compose
+        ↓
+ApiSelector
+        ↓
+Qwen3 8B tramite Ollama sull'host
+        ↓
+GeneratedApiCall
+        ↓
+ApiCallValidator
+        ↓
+ApiRequestPreparer
+        ↓
+RestClient
+        ↓
+persistence-service:8081
+        ↓
+Persistence Service container
+        ↓
+MongoDB
+        ↓
+risposta reale
+```
+
+Questo test conclude la seconda fase della strategia di integrazione
+incrementale definita l'11 agosto.
+
+La prima fase aveva verificato:
+
+```text
+Agent Service sull'host
+→ Persistence Service in Docker
+```
+
+La seconda fase verifica:
+
+```text
+Agent Service in Docker
+→ Persistence Service in Docker
+```
+
+mantenendo Ollama sull'host.
+
+### Relationship with the frozen benchmark
+
+Anche questa verifica rimane distinta dal benchmark quantitativo congelato il
+10 agosto 2026.
+
+Il benchmark:
+
+```text
+5 casi
+3 ripetizioni
+15 esecuzioni
+```
+
+utilizza il Persistence Service simulato e misura il comportamento della
+pipeline su un insieme controllato di richieste.
+
+Le verifiche dell'11 e del 12 agosto hanno invece lo scopo di verificare
+l'integrazione infrastrutturale e applicativa con WLDT.
+
+Di conseguenza:
+
+```text
+integrazione reale riuscita
+!=
+modifica delle metriche del benchmark
+```
+
+Il risultato:
+
+```text
+02_esperimenti/pipeline_finale/results_20260810_201100.json
+```
+
+rimane congelato.
+
 ### Current limitations
 
-La prima integrazione reale verifica l'Agent Service eseguito sull'host e il
-Persistence Service eseguito nello stack Docker.
+La pipeline completa è ora stata verificata sia con Agent Service sull'host sia
+con Agent Service containerizzato nello stack development WLDT.
 
 Rimangono da completare:
 
-- containerizzazione dell'Agent Service;
-- inserimento dell'Agent Service nel `docker-compose.dev`;
-- comunicazione container-to-container con il Persistence Service;
-- comunicazione tra il container dell'agente e Ollama;
 - integrazione della modalità Natural Language nel Query Workbench;
+- collegamento dell'interfaccia frontend a `POST /query`;
+- rappresentazione nel frontend dei risultati e degli errori restituiti
+  dall'Agent Service;
 - valutazione su un insieme di richieste indipendente dai casi utilizzati
   durante lo sviluppo;
 - eventuale evoluzione della metodologia di valutazione sulla base dei
   successivi feedback del relatore.
+
+Ollama e Qwen3 8B rimangono attualmente in esecuzione sull'host e vengono
+raggiunti dal container tramite `host.docker.internal`.
+
+La containerizzazione del runtime LLM non rientra nell'integrazione verificata
+in questa fase.

@@ -1061,3 +1061,438 @@ Sul piano della valutazione:
    metodologie di valutazione più strutturate;
 3. progettare successivamente una valutazione su richieste indipendenti da
    quelle utilizzate durante lo sviluppo.
+
+## 12/08/2026
+
+### Obiettivo
+
+Completare la seconda fase dell'integrazione WLDT, containerizzando l'Agent
+Service e verificando la comunicazione Docker-to-Docker con il Persistence
+Service.
+
+L'obiettivo del test è passare dalla configurazione verificata l'11 agosto:
+
+```text
+Agent Service sull'host
+→ Persistence Service in Docker
+```
+
+alla configurazione:
+
+```text
+Agent Service in Docker
+→ Persistence Service in Docker
+```
+
+mantenendo temporaneamente Ollama sull'host Windows.
+
+### Controlli iniziali
+
+Verificato che la repository della tesi non presentasse modifiche inattese.
+
+Riavviato lo stack WLDT development e verificata la persistenza del volume
+MongoDB.
+
+L'HDT:
+
+```text
+TEST-001
+```
+
+creato l'11 agosto risultava ancora disponibile e utilizzabile per i test.
+
+La suite automatica dell'Agent Service è stata eseguita tramite:
+
+```powershell
+uv run python -m pytest -q
+```
+
+senza errori.
+
+### Analisi dell'Agent Service prima della containerizzazione
+
+Prima di creare la configurazione Docker sono stati verificati:
+
+```text
+pyproject.toml
+uv.lock
+app/config.py
+app/main.py
+README.md
+```
+
+Il progetto richiede:
+
+```text
+Python >= 3.12
+```
+
+e utilizza `uv` per la gestione delle dipendenze.
+
+L'applicazione FastAPI viene avviata tramite:
+
+```text
+app.main:app
+```
+
+ed espone la porta:
+
+```text
+8000
+```
+
+Non erano presenti in precedenza:
+
+```text
+Dockerfile
+.dockerignore
+```
+
+### Creazione del Dockerfile
+
+È stato creato:
+
+```text
+05_codice/agent_service/Dockerfile
+```
+
+utilizzando:
+
+```text
+python:3.12-slim
+```
+
+come immagine Python.
+
+Il binario `uv` viene copiato nell'immagine e le dipendenze vengono installate
+a partire da:
+
+```text
+pyproject.toml
+uv.lock
+```
+
+Il codice applicativo viene successivamente copiato in:
+
+```text
+/app/app
+```
+
+e Uvicorn viene avviato con:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+È stato inoltre creato `.dockerignore` per escludere dal build context
+l'ambiente virtuale Windows, cache Python, `.env` e altri artefatti locali.
+
+### Build dell'immagine
+
+L'immagine è stata costruita con successo.
+
+Il primo test è stato eseguito separatamente dal progetto Compose per isolare
+eventuali problemi legati al Dockerfile e alla comunicazione container-to-host.
+
+### Test standalone del container
+
+Il container standalone è stato configurato con:
+
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+PERSISTENCE_SERVICE_BASE_URL=http://host.docker.internal:8081
+OPENAPI_SPEC_URL=http://host.docker.internal:8081/openapi.yaml
+```
+
+Sono stati verificati:
+
+```text
+GET /health
+GET /openapi/status
+```
+
+con risultato positivo.
+
+`/openapi/status` ha restituito:
+
+```text
+status = ok
+source = http://host.docker.internal:8081/openapi.yaml
+OpenAPI version = 3.1.1
+path count = 26
+```
+
+È stato quindi ripetuto il test NL-to-REST:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+Il modello ha generato:
+
+```text
+GET /hdts/{id}/snapshot
+id = TEST-001
+```
+
+La validazione ha restituito:
+
+```text
+valid = true
+```
+
+La richiesta preparata era:
+
+```text
+GET http://host.docker.internal:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha risposto HTTP 200 con:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+Il test ha quindi verificato contemporaneamente:
+
+```text
+Agent container
+→ Ollama sull'host
+```
+
+e:
+
+```text
+Agent container
+→ Persistence Service tramite host
+```
+
+### Integrazione nello stack Compose development
+
+Dopo il successo del test standalone è stata analizzata la configurazione:
+
+```text
+whdt-monitor-infra/docker-compose.yml
+whdt-monitor-infra/docker-compose.dev.yml
+```
+
+Lo stack development dispone di una rete Compose condivisa tra i servizi.
+
+È stato aggiunto:
+
+```text
+agent-service
+```
+
+con build context:
+
+```text
+../../Tesi-WLDT/05_codice/agent_service
+```
+
+e porta:
+
+```text
+8000:8000
+```
+
+La configurazione dell'Agent Service nello stack utilizza:
+
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+PERSISTENCE_SERVICE_BASE_URL=http://persistence-service:8081
+OPENAPI_SPEC_URL=http://persistence-service:8081/openapi.yaml
+```
+
+La comunicazione con il Persistence Service utilizza quindi il nome del servizio
+all'interno della rete Docker invece di passare attraverso la porta dell'host.
+
+### Verifica del servizio nello stack
+
+Compose ha costruito e avviato correttamente l'Agent Service.
+
+I log hanno mostrato:
+
+```text
+Application startup complete.
+Uvicorn running on http://0.0.0.0:8000
+```
+
+La richiesta:
+
+```text
+GET /health
+```
+
+ha restituito:
+
+```text
+status = ok
+```
+
+La richiesta:
+
+```text
+GET /openapi/status
+```
+
+ha restituito:
+
+```text
+status = ok
+source = http://persistence-service:8081/openapi.yaml
+OpenAPI version = 3.1.1
+path count = 26
+```
+
+Il valore di `source` conferma che l'Agent Service utilizza ora la comunicazione
+interna Docker-to-Docker per accedere al Persistence Service.
+
+### Test NL-to-REST Docker-to-Docker
+
+È stata ripetuta la richiesta:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+`ApiSelector` ha classificato al primo posto:
+
+```text
+GET /hdts/{id}/snapshot
+```
+
+Qwen3 8B ha prodotto:
+
+```text
+method = GET
+endpoint = /hdts/{id}/snapshot
+pathParameters.id = TEST-001
+queryParameters = {}
+body = null
+missingInformation = []
+```
+
+La validazione ha restituito:
+
+```text
+valid = true
+```
+
+La richiesta preparata è stata:
+
+```text
+GET http://persistence-service:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha restituito:
+
+```text
+HTTP 200
+```
+
+con:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+È stata quindi verificata la pipeline:
+
+```text
+richiesta naturale
+→ Agent Service in Docker
+→ OpenAPI tramite rete Compose
+→ ApiSelector
+→ Qwen3 8B tramite Ollama sull'host
+→ GeneratedApiCall
+→ ApiCallValidator
+→ ApiRequestPreparer
+→ RestClient
+→ Persistence Service in Docker
+→ MongoDB
+→ risposta reale
+```
+
+### Risultato
+
+La seconda fase della strategia di integrazione incrementale è conclusa.
+
+Risultano ora verificate entrambe le configurazioni:
+
+```text
+11/08/2026
+Agent Service sull'host
+→ Persistence Service in Docker
+```
+
+e:
+
+```text
+12/08/2026
+Agent Service in Docker
+→ Persistence Service in Docker
+```
+
+Ollama rimane sull'host ed è raggiunto dal container tramite:
+
+```text
+host.docker.internal:11434
+```
+
+### Benchmark
+
+Il benchmark congelato del 10 agosto non è stato modificato.
+
+Le verifiche del 12 agosto riguardano containerizzazione e integrazione
+infrastrutturale e non costituiscono un nuovo benchmark quantitativo.
+
+### Stato raggiunto
+
+A fine attività risultano completati:
+
+```text
+pipeline NL-to-REST
+Agent Service FastAPI
+OpenAPI dinamica
+selezione top 3
+Qwen3 8B
+structured output
+validazione OpenAPI
+preparazione HTTP
+RestClient
+benchmark controllato
+integrazione con Persistence reale
+creazione e utilizzo di TEST-001
+Dockerfile Agent Service
+immagine Docker Agent Service
+test standalone container
+integrazione nel Compose development
+comunicazione Docker-to-Docker
+test NL-to-REST Docker-to-Docker
+```
+
+### Prossimi passi
+
+Il prossimo blocco tecnico riguarda principalmente il frontend:
+
+1. analizzare il Query Workbench corrente;
+2. definire il punto di integrazione dell'Agent Service;
+3. aggiungere la modalità Natural Language;
+4. inviare le richieste a `POST /query`;
+5. visualizzare risultato ed eventuali errori;
+6. verificare il flusso completo browser → Agent → Persistence.
+
+Sul piano sperimentale rimangono:
+
+1. valutazione su richieste indipendenti dai casi utilizzati durante lo sviluppo;
+2. eventuale evoluzione della metodologia di valutazione dopo il successivo
+   feedback del relatore.

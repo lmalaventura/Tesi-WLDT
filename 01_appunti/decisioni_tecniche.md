@@ -843,3 +843,391 @@ richiesta naturale
 
 con Agent Service e Persistence Service integrati nello stack Docker
 development.
+
+---
+
+## Containerizzazione dell'Agent Service — 12/08/2026
+
+### Problema
+
+L'Agent Service era stato verificato contro il Persistence Service reale, ma
+veniva ancora eseguito direttamente sull'host Windows.
+
+La configurazione finale richiede invece che il servizio possa essere integrato
+nell'ambiente Docker development di WLDT.
+
+### Decisione
+
+Containerizzare:
+
+```text
+05_codice/agent_service
+```
+
+utilizzando un'immagine Python 3.12 e le dipendenze già definite in:
+
+```text
+pyproject.toml
+uv.lock
+```
+
+### Implementazione
+
+Sono stati aggiunti:
+
+```text
+Dockerfile
+.dockerignore
+```
+
+Il container avvia:
+
+```text
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+ed espone la porta:
+
+```text
+8000
+```
+
+### Motivazione
+
+La containerizzazione rende l'Agent Service coerente con l'architettura
+distribuita degli altri servizi WLDT e permette di verificare il servizio nello
+stesso ambiente di rete del Persistence Service.
+
+---
+
+## Verifica standalone prima dell'integrazione Compose — 12/08/2026
+
+### Decisione
+
+Prima di inserire l'Agent Service nello stack development, eseguire una verifica
+standalone del container.
+
+### Configurazione
+
+Utilizzare:
+
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+PERSISTENCE_SERVICE_BASE_URL=http://host.docker.internal:8081
+OPENAPI_SPEC_URL=http://host.docker.internal:8081/openapi.yaml
+```
+
+### Motivazione
+
+La verifica separata consente di distinguere:
+
+```text
+problemi del Dockerfile/container
+```
+
+da:
+
+```text
+problemi del networking Compose
+```
+
+La stessa strategia incrementale era stata utilizzata il giorno precedente per
+distinguere problemi della pipeline da problemi di containerizzazione.
+
+### Esito
+
+Il container standalone ha:
+
+- avviato correttamente FastAPI/Uvicorn;
+- raggiunto la OpenAPI reale;
+- raggiunto Ollama sull'host;
+- eseguito Qwen3 8B;
+- generato e validato la chiamata;
+- raggiunto il Persistence Service;
+- restituito lo snapshot reale di `TEST-001`.
+
+---
+
+## Comunicazione con Ollama dal container — 12/08/2026
+
+### Problema
+
+Ollama e Qwen3 8B rimangono in esecuzione direttamente sull'host Windows.
+
+All'interno del container:
+
+```text
+localhost
+```
+
+identifica il container stesso e non l'host.
+
+### Decisione
+
+Configurare:
+
+```text
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+
+### Motivazione
+
+L'Agent Service deve raggiungere il runtime Ollama eseguito sull'host senza
+containerizzare contemporaneamente anche il modello.
+
+### Esito
+
+La configurazione è stata verificata attraverso un'esecuzione completa di
+`POST /query`.
+
+Non è stato necessario modificare `OllamaClient` o la logica applicativa.
+
+---
+
+## Comunicazione Docker-to-Docker con Persistence Service — 12/08/2026
+
+### Problema
+
+Durante il test standalone il Persistence Service veniva raggiunto tramite:
+
+```text
+http://host.docker.internal:8081
+```
+
+Una volta inseriti Agent Service e Persistence Service nello stesso progetto
+Compose, il passaggio attraverso l'host non è necessario.
+
+### Decisione
+
+Utilizzare:
+
+```text
+PERSISTENCE_SERVICE_BASE_URL=http://persistence-service:8081
+```
+
+e:
+
+```text
+OPENAPI_SPEC_URL=http://persistence-service:8081/openapi.yaml
+```
+
+### Motivazione
+
+L'Agent Service deve utilizzare la rete interna dello stack e individuare il
+Persistence Service tramite il nome del servizio Compose.
+
+Questa configurazione riduce la dipendenza dalle porte pubblicate sull'host per
+la comunicazione tra componenti interni.
+
+### Esito
+
+`GET /openapi/status` ha restituito:
+
+```text
+source = http://persistence-service:8081/openapi.yaml
+```
+
+confermando che il contratto OpenAPI viene recuperato tramite la comunicazione
+Docker-to-Docker.
+
+---
+
+## Inserimento dell'Agent Service nello stack development — 12/08/2026
+
+### Decisione
+
+Estendere la configurazione development con:
+
+```text
+agent-service
+```
+
+senza modificare la configurazione applicativa Python.
+
+### Configurazione
+
+Il servizio utilizza:
+
+```text
+build context = ../../Tesi-WLDT/05_codice/agent_service
+port = 8000:8000
+```
+
+e dipende dal:
+
+```text
+persistence-service
+```
+
+### Motivazione
+
+L'Agent Service rimane un microservizio separato, coerentemente con
+l'architettura definita per la tesi.
+
+La configurazione tramite variabili d'ambiente permette allo stesso codice di
+essere eseguito:
+
+```text
+localmente
+```
+
+oppure:
+
+```text
+dentro Docker
+```
+
+senza introdurre branch applicativi specifici per l'ambiente.
+
+---
+
+## Criterio di successo della containerizzazione raggiunto — 12/08/2026
+
+### Criterio precedente
+
+L'11 agosto era stato stabilito che la seconda fase sarebbe stata considerata
+completata quando fosse stato possibile eseguire:
+
+```text
+richiesta naturale
+→ Agent Service in Docker
+→ GET /hdts/{id}/snapshot
+→ Persistence Service in Docker
+→ HTTP 200
+```
+
+### Verifica
+
+La richiesta:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+ha prodotto:
+
+```text
+method = GET
+endpoint = /hdts/{id}/snapshot
+pathParameters.id = TEST-001
+```
+
+La validazione ha restituito:
+
+```text
+valid = true
+```
+
+e la richiesta preparata è stata:
+
+```text
+GET http://persistence-service:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha restituito:
+
+```text
+HTTP 200
+```
+
+con i valori reali del Digital Twin.
+
+### Decisione
+
+Considerare completata la seconda fase della strategia di integrazione
+incrementale.
+
+La configurazione verificata è:
+
+```text
+Agent Service in Docker
+        ↓
+Persistence Service in Docker
+        ↓
+MongoDB
+```
+
+con:
+
+```text
+Agent Service in Docker
+        ↓
+Ollama sull'host
+```
+
+per la componente LLM.
+
+---
+
+## Nessuna modifica del benchmark dopo la containerizzazione — 12/08/2026
+
+### Decisione
+
+Non ripetere o modificare il benchmark congelato del 10 agosto come conseguenza
+della containerizzazione.
+
+### Motivazione
+
+Le modifiche del 12 agosto riguardano:
+
+```text
+packaging
+containerizzazione
+networking
+integrazione infrastrutturale
+```
+
+e non costituiscono un intervento finalizzato a correggere i casi Q1 o Q4.
+
+Il benchmark precedente rimane quindi il checkpoint quantitativo della pipeline
+al momento del congelamento.
+
+Le verifiche Docker vengono mantenute come test di integrazione separati.
+
+---
+
+## Prossimo livello di integrazione — frontend — 12/08/2026
+
+### Decisione
+
+Dopo il completamento della containerizzazione, il prossimo intervento
+funzionale riguarda l'integrazione dell'Agent Service nel Query Workbench.
+
+### Obiettivo
+
+Passare dalla verifica:
+
+```text
+PowerShell
+→ Agent Service
+→ Persistence Service
+```
+
+alla verifica:
+
+```text
+browser
+→ Query Workbench
+→ Agent Service
+→ Persistence Service
+→ risultato visualizzato nel frontend
+```
+
+### Vincolo
+
+L'integrazione frontend non deve bypassare:
+
+```text
+POST /query
+```
+
+né duplicare nel frontend la logica di:
+
+```text
+selezione
+generazione
+validazione
+preparazione REST
+```
+
+Queste responsabilità rimangono appartenenti all'Agent Service.
