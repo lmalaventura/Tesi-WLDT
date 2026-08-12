@@ -2,71 +2,93 @@
 
 ## Titolo provvisorio
 
-Traduzione di richieste in linguaggio naturale in chiamate REST per il
-sistema WLDT
+**Progettazione e implementazione di un agente LLM per la traduzione di richieste in linguaggio naturale in chiamate REST nel sistema WLDT**
 
-Il titolo deve essere confermato con la relatrice.
+Il lavoro effettivamente svolto riguarda la trasformazione NL → REST guidata dalla specifica OpenAPI del Persistence Service, e non una traduzione NL → SQL.
 
 ## Capitolo 1 — Introduzione
 
-- contesto generale;
-- problema affrontato;
-- obiettivo del lavoro;
+Introduce il contesto generale del lavoro e definisce il problema affrontato.
+
+- contesto del sistema WLDT;
+- modalità di interrogazione del Persistence Service;
+- problema della traduzione da linguaggio naturale a chiamate API;
+- obiettivi della tesi;
 - contributi principali;
-- organizzazione della tesi.
+- organizzazione del documento.
 
-## Capitolo 2 — Contesto tecnologico
+## Capitolo 2 — Contesto tecnologico e formulazione del problema
 
-- sistema WLDT;
-- Persistence Service;
-- contratto OpenAPI;
-- Large Language Model;
-- modelli locali e Ollama.
+Descrive le tecnologie e i vincoli necessari per comprendere le scelte successive.
 
-## Capitolo 3 — Analisi del problema
+- architettura essenziale di WLDT;
+- ruolo del Persistence Service;
+- API REST e specifica OpenAPI;
+- Large Language Model e inferenza locale;
+- Ollama e Qwen3 8B;
+- Agent Service e comunicazione HTTP;
+- requisiti e vincoli derivanti dall'infrastruttura esistente;
+- rischi legati alla generazione di chiamate non conformi al contratto API.
 
-- requisiti funzionali;
-- requisiti non funzionali;
-- vincoli del sistema esistente;
-- formato della chiamata generata;
-- rischi di allucinazione degli endpoint.
+## Capitolo 3 — Metodologia sperimentale e scelte progettuali
 
-## Capitolo 4 — Metodologia sperimentale
+Descrive gli esperimenti che hanno preceduto l'implementazione e mostra come i risultati abbiano influenzato la progettazione della soluzione.
 
-- definizione del benchmark;
+- definizione del benchmark esplorativo;
 - richieste utilizzate;
-- modelli confrontati;
-- criteri di valutazione;
-- risultati preliminari.
+- modelli linguistici confrontati;
+- diverse modalità di rappresentazione del contesto OpenAPI;
+- criteri e metodologia di valutazione;
+- risultati degli esperimenti preliminari;
+- limiti osservati nell'utilizzo diretto dell'OpenAPI completa;
+- motivazione della selezione preventiva delle operazioni candidate;
+- confronto concettuale con approcci agentici più generali;
+- motivazione della pipeline specifica per WLDT.
 
-## Capitolo 5 — Progettazione della pipeline
+Gli esperimenti esplorativi utilizzati durante la progettazione verranno distinti dalla successiva valutazione della pipeline implementata.
 
-- architettura dell'Agent Service;
-- caricamento dinamico dell'OpenAPI;
-- catalogo delle operazioni;
-- selezione delle API candidate;
+## Capitolo 4 — Progettazione e implementazione dell'Agent Service
+
+Descrive l'architettura della soluzione e la sua realizzazione.
+
+- estensione dell'architettura WLDT;
+- caricamento dinamico della specifica OpenAPI;
+- costruzione del catalogo delle operazioni;
+- selezione deterministica delle operazioni candidate;
 - costruzione del prompt;
-- validazione;
-- esecuzione della chiamata REST.
+- utilizzo di Qwen3 8B tramite Ollama;
+- formato strutturato `GeneratedApiCall`;
+- gestione delle informazioni mancanti;
+- validazione deterministica rispetto alla OpenAPI;
+- preparazione ed esecuzione della richiesta REST;
+- organizzazione dell'Agent Service in FastAPI;
+- configurazione del servizio;
+- test automatici;
+- containerizzazione tramite Docker.
 
-## Capitolo 6 — Implementazione
+## Capitolo 5 — Integrazione, valutazione e discussione
 
-- FastAPI;
-- organizzazione del codice;
-- integrazione con Ollama;
-- gestione della configurazione;
-- testing.
+Verifica il comportamento della soluzione nel sistema WLDT reale e discute i risultati ottenuti.
 
-## Capitolo 7 — Integrazione e valutazione
+- integrazione dell'Agent Service nello stack Docker di sviluppo;
+- comunicazione con Ollama e Persistence Service;
+- integrazione nel Query Workbench;
+- modalità Natural Language;
+- comunicazione frontend → Agent Service tramite Next.js;
+- test end-to-end sul sistema reale;
+- benchmark controllato della pipeline implementata;
+- successiva valutazione su richieste indipendenti dai casi utilizzati durante lo sviluppo;
+- analisi degli errori;
+- limiti metodologici e implementativi;
+- discussione dei risultati.
 
-- collegamento con il Persistence Service;
-- collegamento con il Query Workbench;
-- test end-to-end;
-- benchmark finale;
-- limiti della soluzione.
+Il benchmark controllato già eseguito verrà mantenuto distinto dalla valutazione finale indipendente.
 
-## Capitolo 8 — Conclusioni
+## Capitolo 6 — Conclusioni e sviluppi futuri
 
-- risultati ottenuti;
-- risposta agli obiettivi;
-- sviluppi futuri.
+- sintesi dei risultati;
+- verifica degli obiettivi iniziali;
+- principali contributi;
+- limiti della soluzione;
+- possibili miglioramenti della metodologia di valutazione;
+- possibili estensioni dell'Agent Service e dell'integrazione WLDT.
