@@ -3,9 +3,7 @@
 ## Python
 
 L'Agent Service è implementato in Python.
-
 Il progetto utilizza Python 3.12 o successivo.
-
 La scelta permette di mantenere il componente indipendente dal frontend e dal
 Persistence Service e di utilizzare librerie adatte all'integrazione con LLM,
 HTTP e OpenAPI.
@@ -13,7 +11,6 @@ HTTP e OpenAPI.
 ## FastAPI
 
 FastAPI viene utilizzato per esporre l'Agent Service come microservizio HTTP.
-
 Gli endpoint implementati sono:
 
 ```text
@@ -47,8 +44,7 @@ PyYAML viene utilizzato per il parsing della specifica OpenAPI in formato YAML.
 ## Ollama
 
 Ollama viene utilizzato come runtime locale del modello linguistico.
-
-La configurazione finale utilizza:
+La configurazione corrente utilizza:
 
 ```text
 qwen3:8b
@@ -62,6 +58,10 @@ think = false
 temperature = 0
 ```
 
+La temperatura impostata a `0` viene utilizzata per ridurre la variabilità
+delle generazioni durante i test, ma non viene considerata una garanzia di
+determinismo assoluto dell'output.
+
 ## Modelli analizzati
 
 Durante la fase sperimentale sono stati analizzati:
@@ -73,29 +73,36 @@ Durante la fase sperimentale sono stati analizzati:
 
 Il confronto iniziale è stato utilizzato per analizzare il comportamento delle
 diverse configurazioni e della rappresentazione del contesto OpenAPI.
-
-Qwen3 8B è stato successivamente utilizzato nella pipeline locale finale.
+Qwen3 8B è stato successivamente utilizzato nella pipeline locale implementata.
 
 ## OpenAPI
 
-La specifica analizzata utilizza:
+Lo snapshot conservato in:
+
+```text
+00_materiali/openapi.yaml
+```
+
+utilizza:
 
 ```text
 OpenAPI 3.1.1
-```
-
-e dichiara:
-
-```text
 info.version: v0.2.0
 ```
 
-La specifica viene utilizzata per:
+e rappresenta la specifica impiegata durante gli esperimenti e il benchmark
+controllato del 10/08/2026.
+Nell'Agent Service definitivo la specifica non viene invece letta da questo
+snapshot, ma recuperata dinamicamente dal Persistence Service in esecuzione.
+La OpenAPI corrente viene utilizzata per:
 
 - catalogazione;
-- selezione;
+- selezione delle operazioni candidate;
 - costruzione del prompt;
-- validazione.
+- validazione della chiamata generata.
+
+La copia sperimentale viene mantenuta separata per conservare la
+riproducibilità dei risultati già ottenuti.
 
 ## pytest
 
@@ -115,7 +122,6 @@ uv run python -m pytest -q
 ## Pipeline dedicata
 
 La soluzione finale non utilizza un framework agentico generalista.
-
 La scelta non deriva dall'impossibilità di implementare il sistema con altri
 framework, ma dalla natura circoscritta del flusso:
 

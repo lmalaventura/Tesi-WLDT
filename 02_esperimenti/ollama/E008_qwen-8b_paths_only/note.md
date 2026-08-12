@@ -16,6 +16,5 @@ contenuto semantico.
 È stato fornito un frammento costruito per il test, contenente i cinque path e
 una breve descrizione delle operazioni. `components` e `schemas` sono stati
 rimossi.
-
 L'esperimento verifica soltanto la selezione dell'endpoint e non la costruzione
 completa di metodo, parametri e body.

@@ -9,9 +9,7 @@ File: openapi.yaml
 ## Prompt
 
 Analizza il file OpenAPI allegato.
-
 Il tuo compito è comprendere quali operazioni possono essere eseguite attraverso questa API.
-
 Non inventare endpoint, parametri o strutture non presenti nel file.
 
 1. Identifica gli endpoint che permettono di interrogare i dati dei Digital Twin.

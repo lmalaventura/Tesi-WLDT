@@ -12,11 +12,8 @@ Qwen3 14B
 ## Prompt
 
 Utilizza esclusivamente il file OpenAPI allegato come descrizione delle API disponibili.
-
 Per ciascuna delle richieste in linguaggio naturale riportate sotto, determina quale chiamata API dovrebbe essere eseguita.
-
 Non inventare endpoint, parametri, campi, operatori o strutture non presenti nell'OpenAPI.
-
 Per ogni richiesta restituisci:
 
 1. metodo HTTP;
@@ -26,7 +23,6 @@ Per ogni richiesta restituisci:
 5. una breve motivazione della scelta.
 
 Se la richiesta non può essere tradotta completamente utilizzando il solo OpenAPI, dichiaralo esplicitamente.
-
 NON eseguire realmente nessuna chiamata.
 
 ---

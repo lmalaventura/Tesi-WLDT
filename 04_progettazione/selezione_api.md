@@ -5,7 +5,6 @@
 Ridurre il numero di operazioni fornite al modello LLM, selezionando
 preventivamente quelle maggiormente coerenti con la richiesta espressa
 dall'utente.
-
 La selezione non determina ancora la chiamata definitiva. Produce una lista
 ordinata di candidati che verrà successivamente inserita nel prompt del
 modello.
@@ -13,7 +12,6 @@ modello.
 ## Origine delle operazioni
 
 Le operazioni non vengono definite manualmente nell'Agent Service.
-
 Il componente utilizza il catalogo costruito a partire dalla specifica OpenAPI
 esposta dal Persistence Service. Per ogni operazione vengono considerate le
 seguenti informazioni:
@@ -48,10 +46,8 @@ nell'OpenAPI. Per esempio, “corrente” viene associato a “snapshot”, ment
 
 Ogni operazione riceve un punteggio in base alla corrispondenza tra i termini
 della richiesta e i metadati OpenAPI.
-
 Path e operationId hanno un peso maggiore rispetto alla descrizione, perché
 rappresentano segnali generalmente più specifici.
-
 Sono inoltre previsti alcuni incrementi di punteggio per intenzioni
 riconoscibili, come:
 
@@ -77,10 +73,8 @@ di costruire un prompt più ristretto per il modello LLM.
 ## Limiti
 
 La selezione corrente è lessicale e deterministica.
-
 Non utilizza embedding o un secondo modello semantico. La qualità dipende
 quindi anche dalla presenza di operationId, summary e descrizioni informative
 nella specifica OpenAPI.
-
 La selezione non sostituisce il modello LLM: riduce soltanto lo spazio delle
 possibili operazioni e rende il passaggio successivo più controllabile.

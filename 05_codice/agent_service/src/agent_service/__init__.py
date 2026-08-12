@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from agent-service!")
+"""Package metadata for the WLDT Agent Service."""

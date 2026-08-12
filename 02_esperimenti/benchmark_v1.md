@@ -33,7 +33,6 @@ Il benchmark era costruito per essere risolto esclusivamente tramite OpenAPI.
 Il codice del Persistence Service mostra però che Q3, quando contiene un
 intervallo, deve usare `/query/event/values/valuesByName`; l'endpoint
 `/query/event/values/history` ignora `from` e `to`.
-
 Q5 dipende inoltre dal significato di “Digital Twin selezionati”. Gli array
 `hdtIds`, `modelIds` e `modelNames` sono obbligatori nel body, ma
 l'implementazione accetta array vuoti come assenza del relativo filtro. Se la

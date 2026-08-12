@@ -19,7 +19,6 @@ dal contratto OpenAPI WLDT.
 
 Il modello non individua correttamente gli endpoint principali presenti
 nell'OpenAPI.
-
 In particolare:
 
 - dichiara inesistente `GET /hdts`;
@@ -97,7 +96,6 @@ Questi tempi non risultano adeguati per un'applicazione interattiva.
 
 L'aumento della dimensione da 8B a 14B non ha migliorato il grounding
 sull'OpenAPI completa.
-
 Il modello 14B è risultato sensibilmente più lento e più oneroso in termini
 di memoria, senza compensare tali costi con una maggiore correttezza.
 
@@ -107,6 +105,5 @@ di memoria, senza compensare tali costi con una maggiore correttezza.
 
 Qwen3 14B non è adatto come modello principale del prototipo nelle condizioni
 hardware disponibili.
-
 Il risultato conferma che il problema osservato non viene risolto aumentando
 soltanto il numero di parametri del modello.

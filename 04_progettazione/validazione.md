@@ -3,10 +3,8 @@
 ## Obiettivo
 
 Una chiamata prodotta dal modello non viene eseguita direttamente.
-
 Prima di raggiungere il Persistence Service deve superare una fase
 deterministica di validazione rispetto alla specifica OpenAPI corrente.
-
 La validazione deve impedire l'esecuzione di chiamate non conformi al contratto
 e mantenere separata la generazione LLM dal controllo deterministico.
 
@@ -14,7 +12,6 @@ e mantenere separata la generazione LLM dal controllo deterministico.
 
 Ollama viene configurato per produrre una struttura compatibile con
 `GeneratedApiCall`.
-
 Il formato contiene:
 
 ```text
@@ -38,9 +35,7 @@ method + endpoint
 ```
 
 corrispondano a una delle operazioni candidate fornite al modello.
-
 Il path deve essere espresso nella forma dichiarata dalla OpenAPI.
-
 Per esempio:
 
 ```text
@@ -73,7 +68,6 @@ Vengono controllati:
 ## Request body
 
 Il body viene confrontato con lo schema OpenAPI.
-
 I controlli comprendono, quando applicabili:
 
 - presenza o assenza del body;
@@ -89,14 +83,12 @@ I controlli comprendono, quando applicabili:
 
 Se l'operazione non prevede un request body, un body generato viene considerato
 non valido.
-
 Se la radice dello schema è un array, un singolo oggetto non viene accettato
 come sostituto.
 
 ## Vincoli specifici delle operazioni
 
 Alcune operazioni richiedono controlli aggiuntivi.
-
 Per esempio:
 
 ```text
@@ -124,34 +116,28 @@ propertyId
 ## Informazioni mancanti
 
 Prima dell'esecuzione viene controllato `missingInformation`.
-
 Se contiene elementi, la pipeline restituisce HTTP 422 e non tenta alcuna
 chiamata verso il Persistence Service.
 
 ## Chiamata non valida
 
 Se il validatore rileva problemi, la pipeline restituisce HTTP 502.
-
 La risposta include informazioni sull'errore e sulla chiamata generata, utili
 alla diagnostica.
-
 La chiamata non raggiunge il Persistence Service.
 
 ## Nessuna correzione automatica
 
 Il validatore non modifica automaticamente la risposta del modello.
-
 Se il modello genera una chiamata errata, questa viene rifiutata invece di
 essere trasformata silenziosamente in una chiamata differente.
-
 La scelta permette di mantenere indipendenti generazione e verifica.
 
 ## Validità OpenAPI e correttezza semantica
 
 La validazione OpenAPI non equivale alla verifica completa dell'intenzione
 dell'utente.
-
-Nel benchmark finale il modello ha prodotto:
+Nel benchmark controllato della pipeline il modello ha prodotto:
 
 ```text
 GTE

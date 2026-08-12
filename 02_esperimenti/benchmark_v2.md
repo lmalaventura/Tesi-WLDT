@@ -2,7 +2,6 @@
 
 Questo benchmark è stato definito dopo la verifica della specifica OpenAPI e
 del comportamento richiesto dal Persistence Service.
-
 La versione v2 corregge la ground truth utilizzata negli esperimenti iniziali
 e costituisce la base dei casi successivamente utilizzati per la valutazione
 della pipeline completa dell'Agent Service.
@@ -40,7 +39,6 @@ id = HDT-001
 ```
 
 L'endpoint deve rimanere espresso utilizzando il placeholder OpenAPI `{id}`.
-
 Il valore concreto viene mantenuto separatamente nei path parameter.
 
 ## Q3 — Valori di una proprietà in un intervallo
@@ -127,11 +125,10 @@ Body:
 ```
 
 Gli array `hdtIds`, `modelIds` e `modelNames` devono essere presenti.
-
 Gli array vuoti rappresentano l'assenza del relativo filtro nella
 configurazione considerata.
 
-## Utilizzo nella pipeline finale
+## Utilizzo nel benchmark controllato della pipeline
 
 I cinque casi sono stati formalizzati nel file:
 
@@ -139,7 +136,7 @@ I cinque casi sono stati formalizzati nel file:
 02_esperimenti/pipeline_finale/cases.json
 ```
 
-La ground truth finale comprende:
+La ground truth del benchmark comprende:
 
 - metodo HTTP;
 - endpoint;
@@ -150,7 +147,6 @@ La ground truth finale comprende:
 
 Il benchmark controllato della pipeline è stato eseguito il 10 agosto 2026
 ripetendo i cinque casi tre volte, per un totale di 15 esecuzioni.
-
 Il risultato congelato è:
 
 ```text
@@ -165,6 +161,5 @@ L'analisi aggregata è documentata in:
 
 Questi casi sono stati utilizzati anche durante lo sviluppo e la diagnostica
 della pipeline.
-
-Il risultato finale deve quindi essere considerato un benchmark controllato e
+Il risultato deve quindi essere considerato un benchmark controllato e
 regressivo e non un test set indipendente.

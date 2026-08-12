@@ -12,7 +12,6 @@
 Verificare se la riduzione del contratto OpenAPI ai soli endpoint necessari
 al benchmark migliori la capacità di Qwen3 8B di individuare e utilizzare
 correttamente le operazioni disponibili.
-
 Rispetto a E004 sono rimasti invariati:
 
 - modello;
@@ -40,7 +39,6 @@ comprensione delle richieste e dei body.
 ## Osservazioni
 
 La riduzione dell'OpenAPI non ha prodotto un miglioramento evidente.
-
 Il modello continua a:
 
 - dichiarare assenti endpoint realmente presenti nel documento;
@@ -118,10 +116,8 @@ valori non forniti dalla richiesta e non ha utilizzato il path reale
 ## Confronto con E004
 
 E004 utilizzava lo stesso modello e l'OpenAPI completa.
-
 E006 utilizza lo stesso modello e una versione ridotta ai soli endpoint
 necessari.
-
 Il comportamento è rimasto sostanzialmente invariato. Non emergono evidenze
 che la dimensione complessiva dell'OpenAPI sia la causa principale degli
 errori osservati.
@@ -133,6 +129,5 @@ errori osservati.
 L'ipotesi secondo cui il modello fallisse principalmente a causa della
 quantità di informazioni irrilevanti presenti nell'OpenAPI non è supportata
 da questo esperimento.
-
 Qwen3 8B continua a non effettuare un grounding affidabile sui path, anche
 quando il documento contiene esclusivamente gli endpoint necessari.

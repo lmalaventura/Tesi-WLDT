@@ -19,7 +19,6 @@ completezza generale dei framework.
 Tutti e tre gli approcci possono essere adattati al caso d'uso. La scelta non
 si basa sull'impossibilità dei framework esistenti di svolgere il compito, né
 su un vantaggio prestazionale già dimostrato.
-
 La pipeline personalizzata è più aderente allo scope attuale perché:
 
 - usa una sola invocazione LLM per richiesta;

@@ -3,15 +3,32 @@
 Repository di lavoro della tesi dedicata alla traduzione di richieste espresse
 in linguaggio naturale in chiamate REST verso il Persistence Service WLDT.
 
+## Obiettivo
+
+Il progetto introduce nel sistema WLDT un Agent Service capace di ricevere una
+richiesta in linguaggio naturale, individuare le operazioni compatibili con il
+contratto OpenAPI corrente, utilizzare un modello linguistico per proporre una
+chiamata REST e validarla prima dell'esecuzione.
+
+Il modello linguistico non interagisce direttamente con il Persistence Service.
+La generazione viene inserita in una pipeline che mantiene separate:
+
+```text
+interpretazione della richiesta
+→ controllo deterministico
+→ esecuzione REST
+```
+
 ## Stato del progetto
 
-È disponibile una prima implementazione completa dell'Agent Service.
+Al checkpoint del 12/08/2026 lo scope funzionale principale
+dell'implementazione è completato.
 
-La pipeline corrente esegue:
+La pipeline corrente è:
 
 ```text
 richiesta naturale
-→ caricamento OpenAPI
+→ caricamento dinamico OpenAPI
 → catalogo delle operazioni
 → selezione delle candidate
 → costruzione del prompt
@@ -23,38 +40,80 @@ richiesta naturale
 → risposta
 ```
 
-L'implementazione corrente si trova in:
+L'Agent Service è stato inoltre:
+
+- verificato contro il Persistence Service WLDT reale;
+- containerizzato;
+- inserito nello stack Docker development;
+- integrato nel Query Workbench;
+- verificato con un flusso end-to-end dal browser al Persistence Service.
+
+L'implementazione corrente dell'agente si trova in:
 
 ```text
 05_codice/agent_service
 ```
 
-La cartella:
+La directory:
 
 ```text
 05_codice/agent
 ```
 
-contiene invece il prototipo storico della fase sperimentale.
+contiene invece il prototipo storico utilizzato durante le prime fasi
+sperimentali.
 
-## Funzionalità implementate
+## Architettura integrata
+
+Il flusso verificato è:
+
+```text
+Utente
+  ↓
+Query Workbench
+  ↓
+Natural Language
+  ↓
+Next.js Route Handler
+  ↓
+Agent Service
+  ↓
+  ├──→ Ollama / Qwen3 8B
+  │
+  └──→ Persistence Service
+              ↓
+            MongoDB
+  ↓
+risultato nel frontend
+```
+
+Il browser invia la richiesta al frontend Next.js tramite:
+
+```text
+POST /api/agent/query
+```
+
+La Route Handler server-side inoltra quindi la richiesta all'Agent Service
+all'interno della rete Docker.
+
+## Funzionalità principali
 
 L'Agent Service:
 
 - recupera dinamicamente la specifica OpenAPI;
-- costruisce un catalogo normalizzato;
+- costruisce un catalogo normalizzato delle operazioni;
 - seleziona un massimo di tre candidate;
-- costruisce un contesto ristretto;
+- costruisce un contesto ristretto per il modello;
 - utilizza Qwen3 8B tramite Ollama;
-- utilizza structured output;
-- produce `GeneratedApiCall`;
-- gestisce informazioni mancanti;
-- valida la chiamata rispetto alla OpenAPI;
+- richiede un output strutturato;
+- produce una struttura `GeneratedApiCall`;
+- gestisce le informazioni mancanti;
+- valida la chiamata rispetto alla OpenAPI corrente;
 - prepara la richiesta HTTP;
-- esegue la chiamata;
-- restituisce la risposta del Persistence Service.
+- esegue la chiamata sul Persistence Service;
+- restituisce il risultato al client.
 
-## Endpoint
+## Endpoint dell'Agent Service
 
 ```text
 GET  /health
@@ -63,18 +122,17 @@ GET  /openapi/operations
 POST /query
 ```
 
-## Struttura principale
+## Struttura principale della repository
 
 ```text
-00_materiali/
-01_appunti/
-02_esperimenti/
-03_risultati/
-04_progettazione/
-05_codice/
-    agent/
-    agent_service/
-06_tesi/
+00_materiali/       specifiche e riferimenti esterni
+01_appunti/         diario e decisioni tecniche
+02_esperimenti/     benchmark ed evidenze sperimentali
+03_risultati/       metodologia e risultati aggregati
+04_progettazione/   documentazione progettuale
+05_codice/          prototipo storico e Agent Service corrente
+06_tesi/            struttura e bozze per la stesura
+docs/               documentazione tecnica complessiva
 ```
 
 ## Tecnologie
@@ -89,14 +147,33 @@ Ollama
 Qwen3 8B
 pytest
 uv
+Docker
+Docker Compose
+Next.js
+TypeScript
 ```
 
-## Benchmark finale
+## Test automatici
+
+Dalla directory:
+
+```text
+05_codice/agent_service
+```
+
+è possibile eseguire:
+
+```powershell
+uv run python -m pytest -q
+```
+
+Al checkpoint del 12/08/2026 la suite corrente comprende 46 test e viene
+completata senza errori.
+
+## Benchmark controllato della pipeline
 
 La pipeline completa è stata verificata tramite un Persistence Service
-simulato.
-
-Il benchmark comprende:
+simulato in un benchmark controllato composto da:
 
 ```text
 5 casi × 3 ripetizioni = 15 esecuzioni
@@ -114,11 +191,14 @@ End-to-end success rate: 60%
 Tempo medio:              25.731 s
 ```
 
-Q2, Q3 e Q5 sono corretti in tutte le ripetizioni.
+Q2, Q3 e Q5 risultano corretti in tutte le ripetizioni.
 
-Q1 fallisce nella generazione dell'operazione e viene bloccato dal validatore.
+Q1 produce una scelta errata dell'operazione, che viene successivamente
+bloccata dal validatore.
 
-Q4 seleziona l'endpoint corretto ma utilizza `GTE` invece di `GT`.
+Q4 seleziona un'operazione compatibile con la OpenAPI ma utilizza `GTE`
+invece di `GT`, mostrando che la conformità strutturale non implica
+necessariamente equivalenza semantica con la richiesta dell'utente.
 
 L'analisi completa è disponibile in:
 
@@ -126,37 +206,77 @@ L'analisi completa è disponibile in:
 03_risultati/benchmark_pipeline_finale.md
 ```
 
-Il risultato grezzo è:
+Il risultato congelato è:
 
 ```text
 02_esperimenti/pipeline_finale/results_20260810_201100.json
 ```
 
-## Test
+I cinque casi del benchmark sono stati utilizzati anche durante lo sviluppo e
+la diagnostica. Il risultato viene quindi interpretato come benchmark
+controllato e regressivo della pipeline, non come stima generale
+dell'accuratezza su richieste arbitrarie.
 
-Dalla directory:
+## OpenAPI degli esperimenti e OpenAPI runtime
+
+La copia:
 
 ```text
-05_codice/agent_service
+00_materiali/openapi.yaml
 ```
 
-eseguire:
+rappresenta la specifica utilizzata dagli esperimenti e dal benchmark
+controllato del 10/08/2026.
 
-```powershell
-uv run python -m pytest -q
+Durante la successiva integrazione con il Persistence Service reale è stata
+recuperata dinamicamente la specifica esposta dal servizio in esecuzione.
+
+I risultati sperimentali congelati non vengono modificati retroattivamente in
+funzione delle successive evoluzioni della specifica o del sistema WLDT.
+
+## Verifica sul sistema WLDT reale
+
+L'Agent Service è stato verificato sullo stack WLDT reale utilizzando un
+Digital Twin di test con identificatore:
+
+```text
+TEST-001
 ```
 
-## Stato dell'integrazione WLDT
+Una richiesta naturale relativa allo snapshot corrente ha prodotto:
 
-La pipeline è stata verificata end-to-end contro un Persistence Service
-simulato.
+```text
+GET /hdts/{id}/snapshot
+id = TEST-001
+```
 
-Rimangono da completare:
+La chiamata ha superato la validazione, è stata eseguita sul Persistence
+Service e ha restituito HTTP 200 con i valori memorizzati nel sistema.
 
-- verifica contro il Persistence Service reale;
-- integrazione nel Query Workbench;
-- test end-to-end frontend → agent → persistence.
+La stessa pipeline è stata successivamente verificata dal Query Workbench del
+frontend, completando il flusso:
 
-I risultati del benchmark corrente non vengono interpretati come stima
-generale dell'accuratezza su richieste arbitrarie, perché i casi sono stati
-utilizzati anche durante sviluppo e diagnostica.
+```text
+browser
+→ frontend
+→ Agent Service
+→ Persistence Service
+→ MongoDB
+→ frontend
+```
+
+Questa verifica costituisce uno smoke test di integrazione e rimane distinta
+dal benchmark quantitativo controllato.
+
+## Stato successivo
+
+Le principali attività ancora aperte riguardano:
+
+- valutazione su un insieme di richieste indipendente dai casi utilizzati
+  durante lo sviluppo;
+- eventuali modifiche richieste;
+- stesura definitiva della tesi;
+- discussione finale dei risultati e dei limiti.
+
+L'implementazione funzionale principale viene considerata congelata al
+12/08/2026 salvo correzioni o richieste successive.

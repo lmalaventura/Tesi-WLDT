@@ -5,7 +5,6 @@
 L'Agent Service è un componente indipendente incaricato di tradurre richieste
 espresse in linguaggio naturale in chiamate REST compatibili con il
 Persistence Service WLDT.
-
 L'agente non modifica il Persistence Service e utilizza la specifica OpenAPI
 corrente come contratto per individuare, generare e validare le operazioni
 disponibili.
@@ -62,7 +61,6 @@ Risposta
 ## Interfaccia HTTP
 
 L'Agent Service è implementato tramite FastAPI.
-
 Espone:
 
 ```text
@@ -78,17 +76,14 @@ POST /query
 
 `OpenApiLoader` recupera la specifica dall'indirizzo configurato del
 Persistence Service.
-
 La pipeline operativa non utilizza una copia statica della OpenAPI come fonte
 principale.
-
 Il documento viene analizzato prima di procedere alle fasi successive.
 
 ## Catalogo delle operazioni
 
 `OpenApiCatalog` trasforma il documento OpenAPI in una rappresentazione
 normalizzata delle operazioni disponibili.
-
 Per ogni operazione vengono mantenute informazioni quali:
 
 - metodo HTTP;
@@ -108,9 +103,7 @@ compatta della specifica.
 
 `ApiSelector` confronta deterministicamente la richiesta dell'utente con i
 metadati delle operazioni.
-
 La pipeline seleziona un massimo di tre candidate ordinate per punteggio.
-
 La selezione riduce il numero di operazioni che devono essere interpretate dal
 modello.
 
@@ -124,7 +117,6 @@ modello.
 
 Il prompt contiene soltanto le informazioni OpenAPI necessarie alle candidate e
 gli schemi referenziati rilevanti.
-
 Tra le regole inserite nel prompt:
 
 - utilizzare una delle candidate;
@@ -137,9 +129,7 @@ Tra le regole inserite nel prompt:
 ## Structured output
 
 Il modello produce una struttura `GeneratedApiCall`.
-
 Lo schema di output viene ristretto dinamicamente sulla base delle candidate.
-
 Possono essere vincolati:
 
 - metodo HTTP;
@@ -157,7 +147,6 @@ Qwen3 8B
 ```
 
 tramite Ollama.
-
 La generazione utilizza structured output con:
 
 ```text
@@ -181,15 +170,12 @@ pipeline interrompe l'esecuzione e restituisce HTTP 422.
 
 `ApiCallValidator` verifica deterministicamente la chiamata generata rispetto
 alla OpenAPI corrente.
-
 Una chiamata non valida viene rifiutata prima dell'esecuzione.
-
 Il validatore non corregge automaticamente la chiamata generata.
 
 ## Preparazione della richiesta
 
 Dopo la validazione, `ApiRequestPreparer` costruisce la richiesta HTTP concreta.
-
 La fase comprende:
 
 - sostituzione dei placeholder del path;
@@ -200,7 +186,6 @@ La fase comprende:
 ## Esecuzione
 
 `RestClient` esegue la richiesta verso il Persistence Service.
-
 La risposta del backend viene quindi restituita dall'Agent Service insieme alle
 informazioni necessarie a descrivere l'esito della pipeline.
 
@@ -208,7 +193,6 @@ informazioni necessarie a descrivere l'esito della pipeline.
 
 Gli esperimenti preliminari hanno mostrato difficoltà dei modelli locali quando
 ricevono direttamente un contesto OpenAPI troppo ampio.
-
 La pipeline finale separa quindi:
 
 ```text
@@ -226,11 +210,9 @@ dell'interazione.
 
 ## Limite emerso dal benchmark
 
-Il benchmark finale ha mostrato che la validità OpenAPI non garantisce
-automaticamente la correttezza semantica.
-
+Il benchmark controllato della pipeline ha mostrato che la validità OpenAPI
+non garantisce automaticamente la correttezza semantica.
 Nel caso Q4 il modello produce un operatore `GTE`, valido secondo OpenAPI, per
 una richiesta che richiede semanticamente `GT`.
-
 Validazione strutturale e correttezza semantica vengono quindi considerate due
 proprietà differenti.

@@ -1,7 +1,6 @@
-# Benchmark della pipeline finale
+# Benchmark controllato della pipeline implementata
 
 Data di esecuzione: 10/08/2026
-
 Risultato grezzo:
 
 ```text
@@ -13,7 +12,6 @@ Risultato grezzo:
 Valutare la pipeline completa dell'Agent Service dalla richiesta in linguaggio
 naturale alla generazione della chiamata REST, alla validazione OpenAPI e
 all'esecuzione verso un Persistence Service simulato.
-
 Il benchmark utilizza cinque casi funzionali ripetuti tre volte ciascuno, per un
 totale di 15 esecuzioni.
 
@@ -74,7 +72,6 @@ End-to-end:           100%
 ## Q1 — Elenco Digital Twin
 
 Q1 fallisce in tutte e tre le ripetizioni.
-
 La richiesta richiede:
 
 ```text
@@ -89,13 +86,10 @@ POST /hdts
 
 accompagnato da un request body di creazione contenente valori non presenti
 nella richiesta dell'utente.
-
 La chiamata generata non rispetta inoltre completamente lo schema OpenAPI
 dell'operazione selezionata.
-
 Il validatore intercetta l'errore e impedisce alla richiesta di raggiungere il
 Persistence Service.
-
 Questo caso mostra contemporaneamente:
 
 - un errore della fase di generazione;
@@ -118,13 +112,11 @@ id = HDT-001
 ```
 
 separato nei `pathParameters`.
-
 La richiesta supera la validazione ed è eseguita correttamente.
 
 ## Q3 — Valori di una proprietà in un intervallo
 
 Q3 è corretto in tutte e tre le ripetizioni.
-
 La pipeline utilizza:
 
 ```text
@@ -132,7 +124,6 @@ POST /query/event/values/valuesByName
 ```
 
 con un body radice di tipo array.
-
 Il modello utilizza correttamente:
 
 ```text
@@ -171,12 +162,9 @@ GT
 ```
 
 `GTE` è un valore valido secondo il contratto OpenAPI.
-
 Per questo motivo la chiamata supera la validazione e viene eseguita dal
 Persistence Service simulato.
-
 La chiamata è tuttavia semanticamente diversa dalla richiesta naturale.
-
 Questo caso evidenzia che:
 
 ```text
@@ -190,7 +178,6 @@ espresso dall'utente.
 ## Q5 — Statistiche senza filtri
 
 Q5 è corretto in tutte e tre le ripetizioni.
-
 La pipeline genera:
 
 ```text
@@ -231,14 +218,10 @@ ma non elimina gli errori sistematici presenti nel comportamento del modello.
 
 L'accuratezza dell'operazione raggiunge l'80%, mentre la correttezza semantica
 end-to-end raggiunge il 60%.
-
 La differenza mostra che individuare metodo ed endpoint corretti non è
 sufficiente a garantire la correttezza della traduzione completa.
-
 La validazione OpenAPI svolge comunque un ruolo importante nella pipeline.
-
 Nel caso Q1 impedisce l'esecuzione di una richiesta non valida.
-
 Q4 mostra invece il limite complementare: una chiamata può essere formalmente
 valida e comunque non rappresentare esattamente l'intento dell'utente.
 
@@ -259,6 +242,6 @@ richieste arbitrarie.
 ## Congelamento del risultato
 
 Il risultato del 10/08/2026 viene mantenuto senza modifiche retroattive.
-
-Eventuali modifiche future all'Agent Service dovranno essere valutate in un
-esperimento separato.
+Eventuali modifiche successive all'Agent Service e la futura valutazione su un
+test set indipendente devono essere documentate in esperimenti separati, senza
+sovrascrivere questo risultato.

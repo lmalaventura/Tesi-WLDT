@@ -3,7 +3,6 @@
 Questa cartella contiene il prototipo sviluppato prima dell'Agent Service. Il
 codice serve a verificare il flusso selezione → prompt → Ollama → validazione →
 preparazione HTTP e viene conservato come evidenza della fase progettuale.
-
 Non è ancora il servizio integrato nel sistema WLDT.
 
 ## Funzioni implementate
@@ -66,3 +65,16 @@ senza errori.
 
 Questi limiti verranno corretti nel nuovo `agent_service` invece di trasformare
 retroattivamente il prototipo sperimentale.
+
+## Evoluzione successiva
+
+Le limitazioni descritte sopra sono state affrontate nel successivo:
+
+```text
+05_codice/agent_service
+```
+
+che rappresenta l'implementazione corrente della tesi.
+Il contenuto di questa cartella viene mantenuto invariato come evidenza della
+fase sperimentale e progettuale precedente alla realizzazione del servizio
+definitivo.

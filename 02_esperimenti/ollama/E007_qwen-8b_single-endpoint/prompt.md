@@ -12,12 +12,9 @@ Qwen3 8B
 ## Prompt
 
 Utilizza esclusivamente il frammento OpenAPI riportato sopra.
-
 Determina quale chiamata API deve essere eseguita per soddisfare la
 richiesta seguente.
-
 Non inventare endpoint o parametri.
-
 Restituisci esclusivamente:
 
 1. metodo HTTP;

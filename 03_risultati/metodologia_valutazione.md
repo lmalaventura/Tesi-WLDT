@@ -1,12 +1,23 @@
 # Metodologia di valutazione
 
-La valutazione del lavoro è stata articolata in due fasi distinte: una fase
-sperimentale iniziale, finalizzata al confronto tra modelli e modalità di
-costruzione del contesto, e una fase finale dedicata alla valutazione della
-pipeline completa dell'Agent Service.
-
-Le due fasi utilizzano metriche differenti e non devono essere confrontate
-come se rappresentassero lo stesso esperimento.
+La valutazione del lavoro è organizzata in tre livelli distinti, corrispondenti
+a momenti e obiettivi differenti del progetto.
+La prima fase comprende gli esperimenti esplorativi utilizzati per confrontare
+modelli linguistici e differenti modalità di costruzione del contesto. Questi
+test hanno avuto principalmente una funzione diagnostica e hanno contribuito a
+motivare le successive scelte progettuali.
+La seconda fase riguarda il benchmark controllato della pipeline implementata.
+In questo caso vengono valutati selezione, generazione, validazione ed
+esecuzione REST utilizzando un Persistence Service simulato. I casi impiegati
+sono stati utilizzati anche durante lo sviluppo e il risultato deve quindi
+essere interpretato come verifica controllata e regressiva della pipeline.
+Una terza fase, da svolgere successivamente, riguarda invece una valutazione su
+un insieme di richieste indipendente dai casi utilizzati durante la
+progettazione e la diagnostica. Lo scopo sarà distinguere maggiormente la
+verifica del comportamento conosciuto dalla capacità della pipeline di
+affrontare richieste non utilizzate nel suo sviluppo.
+Le tre fasi hanno finalità e metriche differenti e non devono essere
+interpretate come se rappresentassero lo stesso esperimento.
 
 ## Benchmark sperimentali sui modelli
 
@@ -22,7 +33,6 @@ richieste e vengono valutati su 50 punti. Per ogni richiesta sono assegnati da
 
 Il punteggio valuta la risposta prodotta in una singola esecuzione. Non misura
 la variabilità tra esecuzioni dello stesso modello.
-
 Questi benchmark sono stati utilizzati in modo esplorativo per osservare il
 comportamento dei modelli in configurazioni differenti e per motivare le
 successive scelte progettuali, in particolare la selezione preliminare di un
@@ -43,26 +53,22 @@ benchmark completi.
 Il prompt dei benchmark sperimentali imponeva di utilizzare esclusivamente
 l'OpenAPI. Le valutazioni storiche devono quindi essere interpretate rispetto
 al contratto disponibile al momento dell'esecuzione.
-
 L'analisi successiva del codice del Persistence Service ha evidenziato che
 `POST /query/event/values/history` usa soltanto `hdtId` e `propertyName`,
 ignorando `from` e `to`. Per l'interrogazione dei valori di una proprietà in un
 intervallo viene invece utilizzato
 `POST /query/event/values/valuesByName`.
-
 Per `POST /query/event/stats`, gli array `hdtIds`, `modelIds` e `modelNames`
 devono essere presenti nel body. Nella configurazione considerata, gli array
 vuoti rappresentano l'assenza del relativo filtro.
-
 Queste differenze non rendono inutili gli esperimenti precedenti, ma impediscono
 di usare senza revisione la loro ground truth come specifica dell'integrazione
 finale.
 
-## Benchmark controllato della pipeline finale
+## Benchmark controllato della pipeline implementata
 
 La pipeline completa è stata valutata con un benchmark separato, memorizzato in
 `02_esperimenti/pipeline_finale`.
-
 Il benchmark comprende cinque richieste rappresentative di funzionalità
 differenti:
 
@@ -82,9 +88,8 @@ Il benchmark valuta la pipeline completa:
 
 `richiesta NL -> caricamento OpenAPI -> catalogo -> selezione candidati -> prompt ristretto -> LLM -> validazione OpenAPI -> preparazione HTTP -> Persistence Service simulato`.
 
-La generazione è eseguita localmente con Qwen3 8B tramite Ollama. Il
-Persistence Service reale non viene utilizzato nel benchmark finale: un mock
-espone la specifica OpenAPI e gli endpoint necessari per verificare che la
+La generazione è eseguita localmente con Qwen3 8B tramite Ollama. Il Persistence Service reale non viene utilizzato
+nel benchmark controllato: un mock espone la specifica OpenAPI e gli endpoint necessari per verificare che la
 richiesta preparata raggiunga effettivamente il livello di esecuzione.
 
 ### Ground truth
@@ -128,16 +133,28 @@ richiesta a `POST /query`. Quando disponibili, vengono inoltre conservate le
 metriche restituite da Ollama, tra cui durata totale, token di prompt valutati e
 token generati.
 
-## Risultato congelato della pipeline
+## Risultato congelato del benchmark controllato
 
-Il benchmark finale congelato è contenuto nel file
+Il benchmark controllato congelato è contenuto nel file
 `results_20260810_201100.json` e comprende 15 esecuzioni. I risultati aggregati
-sono documentati separatamente in
-`03_risultati/benchmark_pipeline_finale.md`.
-
+sono documentati separatamente in `03_risultati/benchmark_pipeline_finale.md`.
 Il file dei risultati e la configurazione associata devono essere conservati
 senza modifiche retroattive. Eventuali evoluzioni successive dell'agente devono
 essere valutate in un nuovo esperimento, mantenendo separati i risultati.
+
+## Valutazione indipendente successiva
+
+Il benchmark controllato non conclude la valutazione sperimentale della tesi,
+poiché i cinque casi utilizzati erano già noti durante lo sviluppo della
+pipeline.
+
+In una fase successiva verrà quindi definito un insieme separato di richieste
+non utilizzate durante l'implementazione e la diagnostica. La metodologia
+precisa verrà definita prima dell'esecuzione, evitando di adattare la pipeline
+ai singoli casi dopo aver osservato i risultati.
+
+Questa valutazione verrà mantenuta separata sia dagli esperimenti esplorativi
+iniziali sia dal benchmark controllato del 10/08/2026.
 
 ## Limiti metodologici
 

@@ -27,14 +27,12 @@ differenti.
 Nei benchmark completi i modelli locali hanno spesso riconosciuto concetti e
 nomi di schemi senza collegarli ai path reali. La riduzione dell'OpenAPI ai
 cinque endpoint rilevanti, mantenendo gli schemi, non ha risolto il problema.
-
 Nelle due esecuzioni diagnostiche, la presentazione isolata o sintetica dei
 path ha invece consentito a Qwen3 8B di scegliere gli endpoint attesi. Questo
 risultato ha motivato l'introduzione di una fase preliminare di selezione delle
 operazioni candidate. Poiché E007 ed E008 non valutano la costruzione completa
 dei parametri e non sono stati ripetuti, il risultato non deve essere descritto
 come prova definitiva di superiorità.
-
 Qwen3 14B ha completato il benchmark in circa 12 minuti, usando circa 14 GB di
 RAM e con utilizzo della GPU osservato come molto basso. Non ha migliorato il
 punteggio ottenuto con l'OpenAPI completa, per cui non è stato scelto per il

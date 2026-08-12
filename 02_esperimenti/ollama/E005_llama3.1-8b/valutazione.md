@@ -17,7 +17,6 @@ linguaggio naturale nelle chiamate API WLDT corrette.
 
 Il modello ha generato rapidamente una risposta chiara e ben strutturata,
 ma non ha utilizzato fedelmente gli endpoint presenti nell'OpenAPI.
-
 Ha invece costruito un'API REST semanticamente plausibile basata sul
 concetto di Digital Twin, introducendo endpoint inesistenti:
 
@@ -83,7 +82,6 @@ INSUFFICIENTE.
 
 Il cambiamento dalla famiglia Qwen3 a Llama 3.1 non ha risolto il problema
 di grounding sul contratto OpenAPI.
-
 Llama 3.1 8B è risultato più rapido nell'esecuzione e non ha mostrato
 reasoning esplicito, ma ha prodotto endpoint inventati sulla base di una
 struttura API semanticamente plausibile.
