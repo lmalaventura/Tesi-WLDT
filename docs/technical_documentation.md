@@ -1147,24 +1147,247 @@ Il risultato:
 
 rimane congelato.
 
+### Query Workbench integration
+
+Il 12 agosto 2026 è stata completata anche l'integrazione dell'Agent Service nel
+Query Workbench del frontend WLDT.
+
+Il componente:
+
+```text
+src/app/query-builder/QueryWorkbench.tsx
+```
+
+è stato esteso introducendo una nuova modalità:
+
+```text
+Natural Language
+```
+
+senza modificare il comportamento dei pannelli di interrogazione già presenti.
+
+È stato aggiunto il componente:
+
+```text
+src/app/query-builder/panels/NaturalLanguageQueryPanel.tsx
+```
+
+che consente all'utente di:
+
+```text
+inserire una richiesta in linguaggio naturale
+→ inviarla all'Agent Service
+→ visualizzare la chiamata REST generata
+→ visualizzare l'esito della validazione
+→ visualizzare la risposta del Persistence Service
+```
+
+Quando il body restituito dal Persistence Service è un array di oggetti, i
+risultati vengono presentati utilizzando una tabella coerente con gli altri
+pannelli del Query Workbench.
+
+### Frontend-to-Agent communication
+
+L'integrazione iniziale aveva utilizzato una rewrite Next.js:
+
+```text
+/api/agent/:path*
+→
+http://agent-service:8000/:path*
+```
+
+Durante l'esecuzione di una richiesta NL-to-REST completa è stato però osservato:
+
+```text
+ECONNRESET
+socket hang up
+```
+
+nel proxy Next.js.
+
+La comunicazione diretta tra il container del frontend e l'Agent Service è stata
+quindi verificata separatamente.
+
+La richiesta:
+
+```text
+GET http://agent-service:8000/health
+```
+
+ha restituito HTTP 200.
+
+È stata inoltre eseguita direttamente dal container frontend una richiesta:
+
+```text
+POST http://agent-service:8000/query
+```
+
+che ha completato correttamente l'intera pipeline e ha restituito HTTP 200.
+
+Questo ha permesso di localizzare il problema nel meccanismo di rewrite e non
+nel networking Docker, nell'Agent Service o nei servizi WLDT.
+
+### Explicit Next.js Route Handler
+
+La rewrite dedicata all'Agent Service è stata quindi sostituita da una Route
+Handler esplicita:
+
+```text
+src/app/api/agent/query/route.ts
+```
+
+Il browser invia:
+
+```text
+POST /api/agent/query
+```
+
+alla Route Handler Next.js.
+
+La Route Handler inoltra successivamente la richiesta server-side a:
+
+```text
+http://agent-service:8000/query
+```
+
+utilizzando la variabile runtime:
+
+```text
+AGENT_SERVICE_URL
+```
+
+La configurazione finale separa quindi:
+
+```text
+Browser
+→ Next.js
+```
+
+da:
+
+```text
+Next.js container
+→ Agent Service container
+```
+
+senza richiedere al browser di conoscere direttamente l'indirizzo del servizio
+Agent nella rete Docker.
+
+### Final browser-to-Persistence verification
+
+Dopo la ricostruzione del frontend è stata verificata la presenza della nuova
+scheda:
+
+```text
+Natural Language
+```
+
+nel Query Workbench.
+
+È stata utilizzata la richiesta:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+Il flusso ha prodotto:
+
+```text
+method = GET
+endpoint = /hdts/{id}/snapshot
+pathParameters.id = TEST-001
+validation = valid
+```
+
+La richiesta effettivamente preparata dall'Agent Service è stata:
+
+```text
+GET http://persistence-service:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha restituito:
+
+```text
+HTTP 200
+```
+
+e il frontend ha visualizzato i valori reali:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+È stata quindi verificata end-to-end la catena completa:
+
+```text
+utente
+→ browser
+→ Query Workbench
+→ Natural Language
+→ Next.js Route Handler
+→ Agent Service
+→ OpenAPI reale
+→ ApiSelector
+→ Qwen3 8B tramite Ollama
+→ GeneratedApiCall
+→ ApiCallValidator
+→ ApiRequestPreparer
+→ RestClient
+→ Persistence Service
+→ MongoDB
+→ risposta
+→ visualizzazione nel browser
+```
+
+### Implementation checkpoint
+
+Con questa verifica risulta completato lo scope funzionale principale previsto
+per l'implementazione della tesi.
+
+Sono stati verificati:
+
+```text
+Agent Service Python
+OpenAPI dinamica
+selezione deterministica delle candidate
+generazione tramite Qwen3 8B
+structured output
+validazione prima dell'esecuzione
+preparazione REST
+esecuzione sul Persistence Service
+integrazione con MongoDB
+containerizzazione Agent Service
+networking Docker-to-Docker
+integrazione nel Query Workbench
+flusso browser-to-Persistence
+```
+
+Il benchmark quantitativo del 10 agosto 2026 rimane separato e congelato.
+
 ### Current limitations
 
-La pipeline completa è ora stata verificata sia con Agent Service sull'host sia
-con Agent Service containerizzato nello stack development WLDT.
+L'implementazione funzionale è completa rispetto allo scope corrente.
 
-Rimangono da completare:
+Rimangono attività sperimentali e di rifinitura, tra cui:
 
-- integrazione della modalità Natural Language nel Query Workbench;
-- collegamento dell'interfaccia frontend a `POST /query`;
-- rappresentazione nel frontend dei risultati e degli errori restituiti
-  dall'Agent Service;
 - valutazione su un insieme di richieste indipendente dai casi utilizzati
   durante lo sviluppo;
-- eventuale evoluzione della metodologia di valutazione sulla base dei
-  successivi feedback del relatore.
+- eventuale evoluzione della metodologia di valutazione sulla base dei feedback
+  successivi del relatore;
+- eventuali miglioramenti dell'interfaccia utente;
+- eventuale analisi separata dei comportamenti anomali osservati nel Persistence
+  Service.
 
-Ollama e Qwen3 8B rimangono attualmente in esecuzione sull'host e vengono
-raggiunti dal container tramite `host.docker.internal`.
+Ollama e Qwen3 8B rimangono attualmente eseguiti sull'host Windows e vengono
+raggiunti dall'Agent Service containerizzato tramite:
 
-La containerizzazione del runtime LLM non rientra nell'integrazione verificata
-in questa fase.
+```text
+host.docker.internal:11434
+```
+
+La containerizzazione del runtime LLM non è necessaria per lo scope
+implementativo verificato in questa fase.

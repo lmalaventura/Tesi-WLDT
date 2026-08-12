@@ -1231,3 +1231,213 @@ preparazione REST
 ```
 
 Queste responsabilità rimangono appartenenti all'Agent Service.
+
+---
+
+## Integrazione dell'Agent Service nel Query Workbench — 12/08/2026
+
+### Decisione
+
+Integrare l'Agent Service come nuova modalità del Query Workbench esistente,
+senza creare una pagina frontend separata.
+
+### Implementazione
+
+È stata aggiunta la scheda:
+
+```text
+Natural Language
+```
+
+e il componente:
+
+```text
+NaturalLanguageQueryPanel
+```
+
+### Motivazione
+
+Il Query Workbench rappresenta già il punto dell'interfaccia dedicato
+all'interrogazione dei dati.
+
+La modalità naturale costituisce quindi una modalità alternativa di costruzione
+della stessa operazione logica, mantenendo coerente l'organizzazione
+dell'interfaccia.
+
+---
+
+## Nessuna chiamata diretta browser-to-Agent — 12/08/2026
+
+### Decisione
+
+Non configurare il browser per chiamare direttamente:
+
+```text
+http://localhost:8000
+```
+
+### Motivazione
+
+Il browser non deve dipendere direttamente dalla topologia interna dello stack
+Docker.
+
+Il frontend Next.js funge da livello server-side tra browser e Agent Service.
+
+La catena scelta è:
+
+```text
+Browser
+→ Next.js
+→ Agent Service
+```
+
+invece di:
+
+```text
+Browser
+→ Agent Service
+```
+
+---
+
+## Sostituzione della rewrite con Route Handler esplicita — 12/08/2026
+
+### Problema
+
+La prima integrazione utilizzava una rewrite Next.js:
+
+```text
+/api/agent/:path*
+→
+http://agent-service:8000/:path*
+```
+
+Durante una richiesta completa il proxy ha prodotto:
+
+```text
+ECONNRESET
+socket hang up
+```
+
+### Evidenza diagnostica
+
+La comunicazione diretta:
+
+```text
+frontend container
+→ Agent Service container
+```
+
+è stata verificata separatamente con successo.
+
+Sia:
+
+```text
+GET /health
+```
+
+sia:
+
+```text
+POST /query
+```
+
+hanno restituito HTTP 200.
+
+### Decisione
+
+Sostituire la rewrite con:
+
+```text
+src/app/api/agent/query/route.ts
+```
+
+che utilizza una richiesta `fetch` server-side esplicita.
+
+### Motivazione
+
+La Route Handler rende controllabile il comportamento della richiesta
+Agent-specifica e permette di propagare esplicitamente:
+
+- body;
+- content type;
+- status code;
+- risposta del servizio;
+- errore di collegamento.
+
+Le rewrite esistenti per Creation Service e Persistence Service rimangono
+inalterate.
+
+---
+
+## Configurazione runtime dell'Agent nel frontend — 12/08/2026
+
+### Decisione
+
+Fornire al container frontend:
+
+```text
+AGENT_SERVICE_URL=http://agent-service:8000
+```
+
+come variabile d'ambiente runtime.
+
+### Motivazione
+
+La Route Handler viene eseguita server-side all'interno del container Next.js e
+deve raggiungere l'Agent Service attraverso il DNS della rete Compose.
+
+Non è necessario inserire l'indirizzo dell'Agent Service nel codice client
+eseguito nel browser.
+
+---
+
+## Criterio finale di completamento dell'implementazione — 12/08/2026
+
+### Criterio
+
+Considerare completato lo scope funzionale principale quando sia verificabile:
+
+```text
+Browser
+→ Query Workbench
+→ richiesta naturale
+→ Agent Service
+→ Persistence Service
+→ MongoDB
+→ risultato visualizzato
+```
+
+### Esito
+
+Il criterio è stato soddisfatto utilizzando:
+
+```text
+TEST-001
+```
+
+La richiesta naturale ha prodotto:
+
+```text
+GET /hdts/{id}/snapshot
+```
+
+la validazione è risultata corretta e il Persistence Service ha restituito HTTP
+200.
+
+I dati reali sono stati visualizzati nel Query Workbench.
+
+### Decisione
+
+Congelare l'implementazione funzionale al checkpoint del:
+
+```text
+12/08/2026
+```
+
+salvo:
+
+- bug successivamente individuati;
+- richieste del relatore;
+- attività necessarie alla valutazione finale;
+- rifiniture non bloccanti.

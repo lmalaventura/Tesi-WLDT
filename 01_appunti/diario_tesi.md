@@ -1496,3 +1496,202 @@ Sul piano sperimentale rimangono:
 1. valutazione su richieste indipendenti dai casi utilizzati durante lo sviluppo;
 2. eventuale evoluzione della metodologia di valutazione dopo il successivo
    feedback del relatore.
+
+## 12/08/2026 — chiusura dell'implementazione funzionale
+
+### Integrazione nel Query Workbench
+
+Dopo il completamento della containerizzazione dell'Agent Service è stata
+avviata l'integrazione frontend.
+
+Il Query Workbench è stato esteso con una quinta scheda:
+
+```text
+Natural Language
+```
+
+È stato aggiunto:
+
+```text
+src/app/query-builder/panels/NaturalLanguageQueryPanel.tsx
+```
+
+Il pannello contiene:
+
+- textarea per la richiesta naturale;
+- pulsante di esecuzione;
+- stato di caricamento;
+- gestione degli errori;
+- visualizzazione della chiamata REST generata;
+- visualizzazione dell'esito della validazione;
+- visualizzazione della risposta del Persistence Service;
+- rappresentazione tabellare dei risultati quando possibile.
+
+### Primo tentativo di proxy Next.js
+
+Inizialmente è stata aggiunta una rewrite:
+
+```text
+/api/agent/:path*
+→
+http://agent-service:8000/:path*
+```
+
+La build Next.js è risultata corretta e la validazione TypeScript non ha
+segnalato errori.
+
+Durante il primo test completo, tuttavia, il frontend ha restituito HTTP 500.
+
+I log hanno mostrato:
+
+```text
+Failed to proxy http://agent-service:8000/query
+ECONNRESET
+socket hang up
+```
+
+### Diagnostica del problema
+
+Tutti i container risultavano attivi.
+
+La comunicazione diretta:
+
+```text
+frontend container
+→ GET http://agent-service:8000/health
+```
+
+ha restituito HTTP 200.
+
+È stata quindi eseguita direttamente dal container frontend:
+
+```text
+POST http://agent-service:8000/query
+```
+
+La richiesta ha restituito HTTP 200 e ha completato correttamente:
+
+```text
+frontend container
+→ Agent Service
+→ Ollama
+→ Persistence Service
+→ MongoDB
+```
+
+Il problema è stato quindi isolato nel meccanismo di rewrite Next.js e non nel
+networking Docker o nella pipeline dell'agente.
+
+### Route Handler esplicita
+
+La rewrite dell'Agent Service è stata rimossa.
+
+È stata introdotta:
+
+```text
+src/app/api/agent/query/route.ts
+```
+
+La Route Handler riceve:
+
+```text
+POST /api/agent/query
+```
+
+e inoltra server-side la richiesta a:
+
+```text
+http://agent-service:8000/query
+```
+
+tramite:
+
+```text
+AGENT_SERVICE_URL
+```
+
+La configurazione dell'URL dell'agente viene fornita al frontend a runtime
+tramite Docker Compose.
+
+### Verifica finale dal browser
+
+Dopo la ricostruzione del frontend è stata aperta:
+
+```text
+http://localhost:3000/query-builder
+```
+
+ed è risultata disponibile la nuova scheda:
+
+```text
+Natural Language
+```
+
+È stata inviata la richiesta:
+
+```text
+Mostrami il valore corrente delle proprieta del Digital Twin con id "TEST-001".
+```
+
+Il sistema ha prodotto:
+
+```text
+GET /hdts/{id}/snapshot
+id = TEST-001
+validation = valid
+```
+
+La richiesta preparata è stata:
+
+```text
+GET http://persistence-service:8081/hdts/TEST-001/snapshot
+```
+
+Il Persistence Service ha restituito:
+
+```text
+HTTP 200
+```
+
+Il Query Workbench ha visualizzato correttamente:
+
+```text
+Age = 30
+task = rest
+Sex = M
+heartRate = 72
+systolicPressure = 120
+```
+
+### Stato finale dell'implementazione
+
+È stato quindi verificato il flusso completo:
+
+```text
+Browser
+→ Query Workbench
+→ Natural Language
+→ Next.js
+→ Agent Service
+→ Qwen3 8B
+→ validazione OpenAPI
+→ Persistence Service
+→ MongoDB
+→ risultato nel browser
+```
+
+Lo scope funzionale principale dell'implementazione della tesi viene quindi
+considerato completato al checkpoint del 12/08/2026.
+
+Il benchmark quantitativo del 10 agosto rimane congelato e separato dai test di
+integrazione.
+
+### Stato attuale
+
+Le attività successive riguarderanno principalmente:
+
+1. eventuali feedback o richieste del relatore;
+2. valutazione indipendente finale;
+3. rifinitura della documentazione;
+4. stesura definitiva della tesi;
+5. eventuali correzioni o miglioramenti non bloccanti.
