@@ -451,5 +451,3 @@ Al checkpoint del 12/08/2026 sono state completate:
 Rimangono aperte principalmente:
 
 - valutazione su un test set indipendente;
-- eventuali modifiche richieste durante la revisione;
-- utilizzo dei risultati nella stesura definitiva della tesi.
