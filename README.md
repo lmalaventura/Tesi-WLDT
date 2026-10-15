@@ -131,7 +131,6 @@ POST /query
 03_risultati/       metodologia e risultati aggregati
 04_progettazione/   documentazione progettuale
 05_codice/          prototipo storico e Agent Service corrente
-06_tesi/            struttura e bozze per la stesura
 docs/               documentazione tecnica complessiva
 ```
 
@@ -278,4 +277,7 @@ Il lavoro è documentato nella tesi "Agenti LLM per l'interazione con Digital Tw
 
 Tra i possibili sviluppi futuri rientrano una valutazione su richieste indipendenti dai casi utilizzati durante lo sviluppo e il miglioramento della selezione preliminare delle operazioni.
 
-Oltre a questa repository, in fase di sviluppo sono stati creati questi branch/repositories: il branch tesi/Natural-Language-Agent in https://github.com/lmalaventura/whdt-monitor-frontend/tree/tesi/Natural-Language-Agent, e la repository wldt-monitor-infra in https://github.com/lmalaventura/whdt-monitor-infra.
+L'integrazione della soluzione nell'ecosistema WLDT è documentata anche nei branch dedicati dei seguenti repository:
+
+- [Frontend WLDT — Natural Language Agent](https://github.com/lmalaventura/whdt-monitor-frontend/tree/tesi/Natural-Language-Agent)
+- [Infrastruttura WLDT — Agent Service Integration](https://github.com/lmalaventura/whdt-monitor-infra/tree/tesi/Agent-Service-Integration)
