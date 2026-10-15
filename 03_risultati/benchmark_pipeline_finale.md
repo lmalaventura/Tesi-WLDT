@@ -85,7 +85,7 @@ POST /hdts
 ```
 
 accompagnato da un request body di creazione contenente valori non presenti
-nella richiesta dell'utente.
+nella richiesta dell'utente. Nel benchmark congelato, l'operazione attesa non compare tra le candidate selezionate (`expected_candidate_rank = null` in tutte e tre le ripetizioni). Il modello riceve quindi un insieme di operazioni che non comprende la ground truth e non può selezionare l'endpoint corretto.
 La chiamata generata non rispetta inoltre completamente lo schema OpenAPI
 dell'operazione selezionata.
 Il validatore intercetta l'errore e impedisce alla richiesta di raggiungere il
