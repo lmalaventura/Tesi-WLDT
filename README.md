@@ -268,15 +268,14 @@ browser
 Questa verifica costituisce uno smoke test di integrazione e rimane distinta
 dal benchmark quantitativo controllato.
 
-## Stato successivo
+## Stato finale e sviluppi futuri
 
-Le principali attività ancora aperte riguardano:
+L'implementazione funzionale dell'Agent Service è stata completata e verificata nel sistema WLDT.
 
-- valutazione su un insieme di richieste indipendente dai casi utilizzati
-  durante lo sviluppo;
-- eventuali modifiche richieste;
-- stesura definitiva della tesi;
-- discussione finale dei risultati e dei limiti.
+Il benchmark controllato del 10/08/2026 e le relative evidenze sperimentali rimangono invariati a fini di riproducibilità.
 
-L'implementazione funzionale principale viene considerata congelata al
-12/08/2026 salvo correzioni o richieste successive.
+Il lavoro è documentato nella tesi "Agenti LLM per l'interazione con Digital Twin: dal linguaggio naturale alle chiamate REST".
+
+Tra i possibili sviluppi futuri rientrano una valutazione su richieste indipendenti dai casi utilizzati durante lo sviluppo e il miglioramento della selezione preliminare delle operazioni.
+
+Oltre a questa repository, in fase di sviluppo sono stati creati questi branch/repositories: il branch tesi/Natural-Language-Agent in https://github.com/lmalaventura/whdt-monitor-frontend/tree/tesi/Natural-Language-Agent, e la repository wldt-monitor-infra in https://github.com/lmalaventura/whdt-monitor-infra.
